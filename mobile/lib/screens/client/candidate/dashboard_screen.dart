@@ -1546,8 +1546,10 @@ class _ApplicationsTabState extends State<_ApplicationsTab> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => Container(
-        padding: EdgeInsets.fromLTRB(20, 20, 20, MediaQuery.of(context).viewInsets.bottom + 20),
+      builder: (sheetCtx) => Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(sheetCtx).viewInsets.bottom),
+        child: Container(
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
         decoration: BoxDecoration(
           color: context.isDark ? GuroJobsTheme.darkCard : Colors.white,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
@@ -1585,6 +1587,7 @@ class _ApplicationsTabState extends State<_ApplicationsTab> {
             ),
           ],
         ),
+      ),
       ),
     );
   }
@@ -1703,7 +1706,6 @@ class _ProfileTab extends StatelessWidget {
             _ProfileMenuItem(icon: Icons.person_outline, label: AppStrings.t('edit_profile'), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const EditProfileScreen()))),
             _ProfileMenuItem(icon: Icons.description_outlined, label: AppStrings.t('my_cv'), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CvScreen()))),
             _ProfileMenuItem(icon: Icons.link, label: AppStrings.t('connections'), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ConnectionsScreen()))),
-            _ProfileMenuItem(icon: Icons.description_outlined, label: AppStrings.t('emp_subscription'), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BillingScreen()))),
             _ProfileMenuItem(icon: Icons.bookmark_outline, label: AppStrings.t('saved_jobs'), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SavedJobsScreen()))),
             _ProfileMenuItem(icon: Icons.notifications_outlined, label: AppStrings.t('notifications'), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen()))),
             _ProfileMenuItem(icon: Icons.settings_outlined, label: AppStrings.t('settings'), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()))),
@@ -2048,13 +2050,8 @@ class _CategoryChip extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
           boxShadow: [BoxShadow(color: context.shadowC, blurRadius: 8, offset: const Offset(0, 2))],
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.asset(image, width: 50, height: 50, color: const Color(0xFF015EA7)),
-            const SizedBox(height: 6),
-            Text(label, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: context.textPrimaryC)),
-          ],
+        child: Center(
+          child: Image.asset(image, width: 80, height: 80, color: const Color(0xFF015EA7)),
         ),
       ),
     );

@@ -11,6 +11,14 @@ import '../client/candidate/help_screen.dart';
 import '../client/candidate/billing_screen.dart';
 import '../client/candidate/chat_screen.dart';
 import '../client/candidate/splash_screen.dart';
+import '../client/candidate/category_gambling_screen.dart';
+import '../client/candidate/category_betting_screen.dart';
+import '../client/candidate/category_crypto_screen.dart';
+import '../client/candidate/category_nutra_screen.dart';
+import '../client/candidate/category_dating_screen.dart';
+import '../client/candidate/category_ecommerce_screen.dart';
+import '../client/candidate/category_fintech_screen.dart';
+import '../client/candidate/category_other_screen.dart';
 
 class EmployerDashboardScreen extends StatefulWidget {
   const EmployerDashboardScreen({super.key});
@@ -151,14 +159,14 @@ class _EmpHomeTab extends StatelessWidget {
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 children: [
-                  _EmpCategoryChip(image: 'assets/images/icon_gambling.png', label: AppStrings.t('gambling')),
-                  _EmpCategoryChip(image: 'assets/images/icon_betting.png', label: AppStrings.t('betting')),
-                  _EmpCategoryChip(image: 'assets/images/icon_crypto.png', label: AppStrings.t('crypto')),
-                  _EmpCategoryChip(image: 'assets/images/icon_nutra.png', label: AppStrings.t('nutra')),
-                  _EmpCategoryChip(image: 'assets/images/icon_dating.png', label: AppStrings.t('dating')),
-                  _EmpCategoryChip(image: 'assets/images/icon_ecommerce.png', label: AppStrings.t('ecommerce')),
-                  _EmpCategoryChip(image: 'assets/images/icon_fintech.png', label: AppStrings.t('fintech')),
-                  _EmpCategoryChip(image: 'assets/images/icon_other.png', label: AppStrings.t('other')),
+                  _EmpCategoryChip(image: 'assets/images/icon_gambling.png', label: AppStrings.t('gambling'), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CategoryGamblingScreen()))),
+                  _EmpCategoryChip(image: 'assets/images/icon_betting.png', label: AppStrings.t('betting'), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CategoryBettingScreen()))),
+                  _EmpCategoryChip(image: 'assets/images/icon_crypto.png', label: AppStrings.t('crypto'), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CategoryCryptoScreen()))),
+                  _EmpCategoryChip(image: 'assets/images/icon_nutra.png', label: AppStrings.t('nutra'), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CategoryNutraScreen()))),
+                  _EmpCategoryChip(image: 'assets/images/icon_dating.png', label: AppStrings.t('dating'), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CategoryDatingScreen()))),
+                  _EmpCategoryChip(image: 'assets/images/icon_ecommerce.png', label: AppStrings.t('ecommerce'), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CategoryEcommerceScreen()))),
+                  _EmpCategoryChip(image: 'assets/images/icon_fintech.png', label: AppStrings.t('fintech'), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CategoryFintechScreen()))),
+                  _EmpCategoryChip(image: 'assets/images/icon_other.png', label: AppStrings.t('other'), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CategoryOtherScreen()))),
                 ],
               ),
             ),
@@ -496,7 +504,7 @@ class _EmpProfileTab extends StatelessWidget {
             const SizedBox(height: 20),
 
             // Menu
-            _ProfileMenuItem(icon: Icons.business_outlined, label: AppStrings.t('emp_company_profile'), onTap: () {}),
+            _ProfileMenuItem(icon: Icons.business_outlined, label: AppStrings.t('emp_company_profile'), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const _CompanyProfileScreen()))),
             _ProfileMenuItem(icon: Icons.description_outlined, label: AppStrings.t('emp_subscription'), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BillingScreen()))),
             _ProfileMenuItem(icon: Icons.notifications_outlined, label: AppStrings.t('notifications'), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen()))),
             _ProfileMenuItem(icon: Icons.settings_outlined, label: AppStrings.t('settings'), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()))),
@@ -520,20 +528,24 @@ class _EmpProfileTab extends StatelessWidget {
 class _EmpCategoryChip extends StatelessWidget {
   final String image;
   final String label;
-  const _EmpCategoryChip({required this.image, required this.label});
+  final VoidCallback? onTap;
+  const _EmpCategoryChip({required this.image, required this.label, this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 90,
-      margin: const EdgeInsets.only(right: 10),
-      decoration: BoxDecoration(
-        color: context.cardBg,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [BoxShadow(color: context.shadowC, blurRadius: 8, offset: const Offset(0, 2))],
-      ),
-      child: Center(
-        child: Image.asset(image, width: 80, height: 80, color: const Color(0xFF015EA7)),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 90,
+        margin: const EdgeInsets.only(right: 10),
+        decoration: BoxDecoration(
+          color: context.cardBg,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [BoxShadow(color: context.shadowC, blurRadius: 8, offset: const Offset(0, 2))],
+        ),
+        child: Center(
+          child: Image.asset(image, width: 80, height: 80, color: const Color(0xFF015EA7)),
+        ),
       ),
     );
   }
@@ -1043,7 +1055,7 @@ class _CandidateDetailSheetState extends State<_CandidateDetailSheet> {
         ),
         child: ListView(
           controller: controller,
-          padding: const EdgeInsets.all(20),
+          padding: EdgeInsets.fromLTRB(20, 20, 20, MediaQuery.of(context).viewInsets.bottom + 20),
           children: [
             Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: context.dividerC, borderRadius: BorderRadius.circular(2)))),
             const SizedBox(height: 20),
@@ -1701,6 +1713,140 @@ class _ProfileMenuItem extends StatelessWidget {
 
 // ═══════════════════════════════════════════════════════════════
 // DEMO DATA
+// ═══════════════════════════════════════════════════════════════
+
+class _CompanyProfileScreen extends StatefulWidget {
+  const _CompanyProfileScreen();
+  @override
+  State<_CompanyProfileScreen> createState() => _CompanyProfileScreenState();
+}
+
+class _CompanyProfileScreenState extends State<_CompanyProfileScreen> {
+  final _nameCtrl = TextEditingController(text: 'Demo Gaming Ltd');
+  final _descCtrl = TextEditingController(text: 'Leading iGaming company specializing in online casino and sports betting solutions. Founded in 2018, operating in 15+ markets worldwide.');
+  final _websiteCtrl = TextEditingController(text: 'https://demogaming.com');
+  final _locationCtrl = TextEditingController(text: 'Malta');
+  final _sizeCtrl = TextEditingController(text: '50-200');
+  final _emailCtrl = TextEditingController(text: 'hr@demogaming.com');
+  final _phoneCtrl = TextEditingController(text: '+356 2123 4567');
+  String _vertical = 'gambling';
+
+  @override
+  void dispose() { _nameCtrl.dispose(); _descCtrl.dispose(); _websiteCtrl.dispose(); _locationCtrl.dispose(); _sizeCtrl.dispose(); _emailCtrl.dispose(); _phoneCtrl.dispose(); super.dispose(); }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(AppStrings.t('emp_company_profile'), style: TextStyle(color: context.textPrimaryC, fontWeight: FontWeight.w700)),
+        backgroundColor: context.cardBg,
+        elevation: 0,
+        iconTheme: IconThemeData(color: context.textPrimaryC),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          // Logo
+          Center(child: Column(children: [
+            Container(
+              width: 90, height: 90,
+              decoration: BoxDecoration(color: GuroJobsTheme.primary.withOpacity(0.1), borderRadius: BorderRadius.circular(22)),
+              child: const Icon(Icons.business, size: 44, color: GuroJobsTheme.primary),
+            ),
+            const SizedBox(height: 10),
+            TextButton.icon(onPressed: () {}, icon: const Icon(Icons.camera_alt_outlined, size: 16), label: const Text('Change Logo'), style: TextButton.styleFrom(foregroundColor: GuroJobsTheme.primary)),
+          ])),
+          const SizedBox(height: 24),
+
+          _buildField('Company Name', _nameCtrl, Icons.business),
+          _buildField('Description', _descCtrl, Icons.description_outlined, maxLines: 4),
+          _buildField('Website', _websiteCtrl, Icons.language),
+          _buildField('Location', _locationCtrl, Icons.location_on_outlined),
+          _buildField('Company Size', _sizeCtrl, Icons.people_outline),
+          _buildField('Contact Email', _emailCtrl, Icons.email_outlined),
+          _buildField('Phone', _phoneCtrl, Icons.phone_outlined),
+
+          const SizedBox(height: 16),
+          Text('Industry', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.textPrimaryC)),
+          const SizedBox(height: 8),
+          Wrap(spacing: 8, runSpacing: 8, children: ['gambling', 'betting', 'crypto', 'nutra', 'dating', 'ecommerce', 'fintech', 'other'].map((v) {
+            final selected = _vertical == v;
+            return GestureDetector(
+              onTap: () => setState(() => _vertical = v),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  color: selected ? GuroJobsTheme.primary : context.surfaceBg,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: selected ? GuroJobsTheme.primary : context.dividerC),
+                ),
+                child: Text(AppStrings.t(v), style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: selected ? Colors.white : context.textSecondaryC)),
+              ),
+            );
+          }).toList()),
+
+          const SizedBox(height: 24),
+
+          // Verified badge
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(color: GuroJobsTheme.success.withOpacity(0.08), borderRadius: BorderRadius.circular(12)),
+            child: Row(children: [
+              const Icon(Icons.verified, color: GuroJobsTheme.success, size: 20),
+              const SizedBox(width: 10),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('Verified Company', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.textPrimaryC)),
+                Text('Your company is verified and visible to candidates', style: TextStyle(fontSize: 12, color: context.textSecondaryC)),
+              ])),
+            ]),
+          ),
+
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity, height: 50,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: const Text('Company profile saved!'), backgroundColor: GuroJobsTheme.success,
+                  behavior: SnackBarBehavior.floating, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ));
+              },
+              icon: const Icon(Icons.save, size: 20),
+              label: const Text('Save Profile', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              style: ElevatedButton.styleFrom(backgroundColor: GuroJobsTheme.primary, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+            ),
+          ),
+          const SizedBox(height: 20),
+        ]),
+      ),
+    );
+  }
+
+  Widget _buildField(String label, TextEditingController ctrl, IconData icon, {int maxLines = 1}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.textPrimaryC)),
+        const SizedBox(height: 6),
+        TextField(
+          controller: ctrl,
+          maxLines: maxLines,
+          style: TextStyle(fontSize: 15, color: context.textPrimaryC),
+          decoration: InputDecoration(
+            prefixIcon: Icon(icon, size: 20, color: context.textHintC),
+            filled: true, fillColor: context.inputFill,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: context.dividerC)),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: context.dividerC)),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: GuroJobsTheme.primary, width: 2)),
+          ),
+        ),
+      ]),
+    );
+  }
+}
+
 // ═══════════════════════════════════════════════════════════════
 
 final List<Map<String, dynamic>> _demoEmployerJobs = [
