@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="180" height="100" viewBox="0 0 180 100">
+  <rect width="180" height="100" rx="14" fill="#fff" filter="drop-shadow(0 2px 10px rgba(0,0,0,0.08))"/>
+  <circle cx="145" cy="25" r="18" fill="#E8F4FD"/>
+  <text x="145" y="31" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#015EA7">✓</text>
+  <text x="20" y="48" font-family="Arial,sans-serif" font-size="22" font-weight="800" fill="#1a1a2e">2,450+</text>
+  <text x="20" y="72" font-family="Arial,sans-serif" font-size="13" fill="#666">iGaming Jobs</text>
+</svg>

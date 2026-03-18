@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="220" height="70" viewBox="0 0 220 70">
+  <defs>
+    <filter id="s3" x="-4%" y="-8%" width="108%" height="120%">
+      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#000" flood-opacity="0.1"/>
+    </filter>
+  </defs>
+  <rect width="220" height="70" rx="14" fill="#fff" filter="url(#s3)"/>
+  <rect x="14" y="14" width="42" height="42" rx="10" fill="#E8F5E9"/>
+  <circle cx="35" cy="30" r="6" fill="none" stroke="#4CAF50" stroke-width="2.5"/>
+  <circle cx="29" cy="38" r="6" fill="none" stroke="#4CAF50" stroke-width="2.5"/>
+  <circle cx="41" cy="38" r="6" fill="none" stroke="#4CAF50" stroke-width="2.5"/>
+  <text x="68" y="32" font-family="Arial,Helvetica,sans-serif" font-size="20" font-weight="800" fill="#1a1a2e">10K+</text>
+  <text x="68" y="50" font-family="Arial,Helvetica,sans-serif" font-size="12" font-weight="500" fill="#777">Real Customers</text>
+</svg>

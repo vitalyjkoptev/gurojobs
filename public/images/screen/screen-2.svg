@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="70" viewBox="0 0 256 70">
+  <defs>
+    <filter id="s2" x="-4%" y="-8%" width="108%" height="120%">
+      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#000" flood-opacity="0.1"/>
+    </filter>
+  </defs>
+  <rect width="256" height="70" rx="14" fill="#fff" filter="url(#s2)"/>
+  <rect x="14" y="14" width="42" height="42" rx="10" fill="#FFF3E0"/>
+  <path d="M35 20 l4 8 h8 l-6 5 l2 8 l-8-5 l-8 5 l2-8 l-6-5 h8z" fill="#FF9800"/>
+  <text x="68" y="32" font-family="Arial,Helvetica,sans-serif" font-size="20" font-weight="800" fill="#1a1a2e">1.2M</text>
+  <text x="68" y="50" font-family="Arial,Helvetica,sans-serif" font-size="12" font-weight="500" fill="#777">Revenue Generated</text>
+</svg>

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="120" viewBox="0 0 160 120">
+  <rect width="160" height="120" rx="14" fill="#fff" filter="drop-shadow(0 2px 10px rgba(0,0,0,0.08))"/>
+  <circle cx="30" cy="28" r="18" fill="#FFF3E0"/>
+  <text x="30" y="34" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#FF9800">🌍</text>
+  <text x="20" y="68" font-family="Arial,sans-serif" font-size="12" fill="#666">Over</text>
+  <text x="20" y="88" font-family="Arial,sans-serif" font-size="20" font-weight="800" fill="#015EA7">30+</text>
+  <text x="20" y="106" font-family="Arial,sans-serif" font-size="12" fill="#666">Countries</text>
+</svg>
