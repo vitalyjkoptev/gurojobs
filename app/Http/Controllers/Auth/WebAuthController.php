@@ -117,7 +117,7 @@ class WebAuthController extends Controller
             $user = User::create([
                 'name' => $role === 'employer' ? 'Demo Employer' : 'Demo Candidate',
                 'email' => $email,
-                'password' => 'demo123!',
+                'password' => env('DEMO_PASSWORD', 'DemoUser2026'),
                 'role' => $role,
                 'status' => 'active',
             ]);
