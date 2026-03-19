@@ -1,5 +1,8 @@
 # GURO JOBS
 
+![User Rating](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/vitalyjkoptev/gurojobs/main/.github/badge-rating.json)
+![Issues](https://img.shields.io/github/issues/vitalyjkoptev/gurojobs?label=Feedback)
+
 **iGaming Job Portal** — Laravel 12 + Flutter
 
 ## Stack
