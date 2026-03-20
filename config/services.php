@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'github' => [
+        'token' => env('GITHUB_TOKEN'),
+        'feedback_repo' => env('GITHUB_FEEDBACK_REPO', 'vitalyjkoptev/gurojobs'),
+    ],
+
 ];

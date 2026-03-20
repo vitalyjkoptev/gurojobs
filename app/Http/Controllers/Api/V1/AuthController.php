@@ -58,6 +58,21 @@ class AuthController extends Controller
             'role' => 'required|in:employer,candidate',
             'phone' => 'nullable|string|max:20',
             'telegram_username' => 'nullable|string|max:100',
+            // Language & country filters
+            'communication_language_priority' => 'nullable|string|max:10',
+            'communication_languages_acceptable' => 'nullable|array',
+            'communication_languages_acceptable.*' => 'string|max:10',
+            // Candidate-specific
+            'citizenship_country' => 'nullable|string|max:100',
+            'in_citizenship_country' => 'nullable|boolean',
+            'blocked_company_countries' => 'nullable|array',
+            'blocked_company_countries.*' => 'string|max:100',
+            // Employer-specific
+            'main_office_countries' => 'nullable|array',
+            'main_office_countries.*' => 'string|max:100',
+            'blocked_candidate_citizenships' => 'nullable|array',
+            'blocked_candidate_citizenships.*' => 'string|max:100',
+            'candidate_location_pref' => 'nullable|string|in:outside,all',
         ]);
 
         $user = User::create([
@@ -70,13 +85,39 @@ class AuthController extends Controller
             'status' => 'active',
         ]);
 
+        $role = $request->input('role');
+
+        // Create profile with filter preferences
+        if ($role === 'candidate') {
+            \App\Models\CandidateProfile::create([
+                'user_id' => $user->id,
+                'communication_language_priority' => $request->input('communication_language_priority'),
+                'communication_languages_acceptable' => $request->input('communication_languages_acceptable'),
+                'citizenship_country' => $request->input('citizenship_country'),
+                'in_citizenship_country' => $request->input('in_citizenship_country'),
+                'blocked_company_countries' => $request->input('blocked_company_countries'),
+            ]);
+        } elseif ($role === 'employer') {
+            \App\Models\Company::create([
+                'user_id' => $user->id,
+                'name' => $request->input('name') . "'s Company",
+                'slug' => \Illuminate\Support\Str::slug($request->input('name') . '-' . $user->id),
+                'plan' => 'free',
+                'communication_language_priority' => $request->input('communication_language_priority'),
+                'communication_languages_acceptable' => $request->input('communication_languages_acceptable'),
+                'main_office_countries' => $request->input('main_office_countries'),
+                'blocked_candidate_citizenships' => $request->input('blocked_candidate_citizenships'),
+                'candidate_location_pref' => $request->input('candidate_location_pref', 'all'),
+            ]);
+        }
+
         $token = $user->createToken('auth')->plainTextToken;
 
         return response()->json([
             'success' => true,
             'message' => 'Registration successful.',
             'token' => $token,
-            'user' => $user,
+            'user' => $user->load($role === 'candidate' ? 'candidateProfile' : 'ownedCompany'),
         ], 201);
     }
 

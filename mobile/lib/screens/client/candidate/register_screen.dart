@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme.dart';
 import '../../../core/localization.dart';
+import '../../../core/countries.dart';
 import '../../../providers/auth_provider.dart';
+import '../../../widgets/filter_pickers.dart';
 import 'dashboard_screen.dart';
 import 'splash_screen.dart';
 import '../../employer/employer_dashboard.dart';
@@ -31,6 +33,18 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
   String _selectedRole = 'candidate';
+
+  // ── Filter fields ──
+  String? _commLangPriority;
+  List<String> _commLangsAcceptable = [];
+  // Candidate
+  String? _citizenshipCountry;
+  bool? _inCitizenshipCountry;
+  List<String> _blockedCompanyCountries = [];
+  // Employer
+  List<String> _mainOfficeCountries = [];
+  List<String> _blockedCandidateCitizenships = [];
+  String _candidateLocationPref = 'all';
 
   late AnimationController _animController;
   late Animation<double> _fadeAnimation;
@@ -83,6 +97,14 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
         name: _nameController.text.trim(), email: _emailController.text.trim(),
         password: _passwordController.text, passwordConfirmation: _confirmPasswordController.text,
         role: _selectedRole, phone: _phoneController.text.trim(), telegramUsername: _telegramController.text.trim(),
+        commLangPriority: _commLangPriority,
+        commLangsAcceptable: _commLangsAcceptable,
+        citizenshipCountry: _citizenshipCountry,
+        inCitizenshipCountry: _inCitizenshipCountry,
+        blockedCompanyCountries: _blockedCompanyCountries,
+        mainOfficeCountries: _mainOfficeCountries,
+        blockedCandidateCitizenships: _blockedCandidateCitizenships,
+        candidateLocationPref: _candidateLocationPref,
       );
     }
     if (success && mounted) {
@@ -197,7 +219,6 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
 
                 Center(
                   child: Column(children: [
-                    // Admin: shield icon + green; Candidate/Employer: G logo + blue
                     Container(
                       width: 70, height: 70,
                       decoration: BoxDecoration(
@@ -292,6 +313,37 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                         const SizedBox(height: 14),
                         _buildLabel('${AppStrings.t('telegram')} (optional)'), const SizedBox(height: 6),
                         TextFormField(controller: _telegramController, decoration: _inputDecoration(hint: AppStrings.t('telegram_hint'), icon: Icons.send_outlined)),
+                        const SizedBox(height: 20),
+
+                        // ── Communication Language Filters ──
+                        _buildSectionTitle(AppStrings.t('communication_preferences')),
+                        const SizedBox(height: 12),
+
+                        SingleSelectPicker(
+                          label: AppStrings.t('priority_language'),
+                          value: _commLangPriority,
+                          items: RefCountries.languageNames(),
+                          hint: AppStrings.t('select_language'),
+                          icon: Icons.language,
+                          onChanged: (v) => setState(() => _commLangPriority = v),
+                        ),
+                        const SizedBox(height: 14),
+
+                        MultiSelectChipsPicker(
+                          label: AppStrings.t('acceptable_languages'),
+                          selected: _commLangsAcceptable,
+                          items: RefCountries.languageNames(),
+                          hint: AppStrings.t('select_languages_hint'),
+                          icon: Icons.translate,
+                          maxSelect: 3,
+                          onChanged: (v) => setState(() => _commLangsAcceptable = v),
+                        ),
+                        const SizedBox(height: 20),
+
+                        // ── Role-specific filters ──
+                        if (_selectedRole == 'candidate') ..._buildCandidateFilters(),
+                        if (_selectedRole == 'employer') ..._buildEmployerFilters(),
+
                         const SizedBox(height: 14),
                       ],
                       const SizedBox(height: 8),
@@ -337,6 +389,110 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
           ),
         ),
       ),
+    );
+  }
+
+  // ── Candidate-specific filter fields ──
+  List<Widget> _buildCandidateFilters() {
+    return [
+      _buildSectionTitle(AppStrings.t('candidate_filters')),
+      const SizedBox(height: 12),
+
+      SingleSelectPicker(
+        label: AppStrings.t('citizenship_country'),
+        value: _citizenshipCountry,
+        items: RefCountries.countryNames(),
+        hint: AppStrings.t('select_country'),
+        icon: Icons.flag_outlined,
+        onChanged: (v) => setState(() => _citizenshipCountry = v),
+      ),
+      const SizedBox(height: 14),
+
+      YesNoToggle(
+        label: AppStrings.t('in_citizenship_country'),
+        value: _inCitizenshipCountry,
+        onChanged: (v) => setState(() => _inCitizenshipCountry = v),
+      ),
+      const SizedBox(height: 14),
+
+      MultiSelectChipsPicker(
+        label: AppStrings.t('blocked_company_countries'),
+        selected: _blockedCompanyCountries,
+        items: RefCountries.countryNames(),
+        hint: AppStrings.t('blocked_countries_hint'),
+        icon: Icons.block,
+        maxSelect: 20,
+        onChanged: (v) => setState(() => _blockedCompanyCountries = v),
+      ),
+    ];
+  }
+
+  // ── Employer-specific filter fields ──
+  List<Widget> _buildEmployerFilters() {
+    return [
+      _buildSectionTitle(AppStrings.t('employer_filters')),
+      const SizedBox(height: 12),
+
+      MultiSelectChipsPicker(
+        label: AppStrings.t('main_office_countries'),
+        selected: _mainOfficeCountries,
+        items: RefCountries.countryNames(),
+        hint: AppStrings.t('select_countries'),
+        icon: Icons.business,
+        maxSelect: 10,
+        onChanged: (v) => setState(() => _mainOfficeCountries = v),
+      ),
+      const SizedBox(height: 14),
+
+      MultiSelectChipsPicker(
+        label: AppStrings.t('blocked_candidate_citizenships'),
+        selected: _blockedCandidateCitizenships,
+        items: RefCountries.countryNames(),
+        hint: AppStrings.t('blocked_citizenships_hint'),
+        icon: Icons.person_off_outlined,
+        maxSelect: 20,
+        onChanged: (v) => setState(() => _blockedCandidateCitizenships = v),
+      ),
+      const SizedBox(height: 14),
+
+      _buildLabel(AppStrings.t('candidate_location_pref')),
+      const SizedBox(height: 8),
+      Row(children: [
+        _buildPrefChip('all', AppStrings.t('all_candidates')),
+        const SizedBox(width: 8),
+        _buildPrefChip('outside', AppStrings.t('outside_citizenship')),
+      ]),
+    ];
+  }
+
+  Widget _buildPrefChip(String value, String label) {
+    final selected = _candidateLocationPref == value;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => _candidateLocationPref = value),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+          decoration: BoxDecoration(
+            color: selected ? GuroJobsTheme.primary : context.cardBg,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: selected ? GuroJobsTheme.primary : context.dividerC, width: selected ? 2 : 1),
+          ),
+          child: Center(child: Text(label, textAlign: TextAlign.center, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: selected ? Colors.white : context.textSecondaryC))),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String text) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+      decoration: BoxDecoration(
+        color: _accentColor.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(text, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: _accentColor)),
     );
   }
 

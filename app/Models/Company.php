@@ -12,6 +12,8 @@ class Company extends Model
         'user_id', 'name', 'slug', 'logo', 'description',
         'website', 'location', 'size', 'founded_year',
         'telegram_channel', 'verified',
+        'communication_language_priority', 'communication_languages_acceptable',
+        'main_office_countries', 'blocked_candidate_citizenships', 'candidate_location_pref',
         'rating_avg', 'rating_count',
         'plan', 'plan_expires_at',
     ];
@@ -20,6 +22,9 @@ class Company extends Model
         'verified' => 'boolean',
         'rating_avg' => 'decimal:2',
         'plan_expires_at' => 'datetime',
+        'communication_languages_acceptable' => 'array',
+        'main_office_countries' => 'array',
+        'blocked_candidate_citizenships' => 'array',
     ];
 
     public function owner(): BelongsTo

@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\V1\SearchController;
 use App\Http\Controllers\Api\V1\TelegramWebhookController;
 use App\Http\Controllers\Auth\RecoveryCodeController;
 use App\Http\Controllers\Api\V1\MessageController;
+use App\Http\Controllers\Api\V1\FeedbackController;
 use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Candidate\ApplicationsController as CandidateApplicationsController;
 use App\Http\Controllers\Candidate\ProfileController;
@@ -43,6 +44,11 @@ Route::prefix('v1')->group(function () {
     // Search
     Route::get('search', [SearchController::class, 'search']);
     Route::get('search/suggest', [SearchController::class, 'suggest']);
+    Route::get('search/candidates', [SearchController::class, 'candidates'])->middleware('auth:sanctum');
+
+    // Reference data (countries, languages)
+    Route::get('ref/countries', fn() => response()->json(['success' => true, 'data' => \App\Support\Countries::all()]));
+    Route::get('ref/languages', fn() => response()->json(['success' => true, 'data' => \App\Support\Countries::languages()]));
 
     // ── Authenticated ────────────────────────────────────────
     Route::middleware('auth:sanctum')->group(function () {
@@ -124,6 +130,11 @@ Route::prefix('v1')->group(function () {
         // Payments
         Route::post('payments/stripe/checkout', [StripeController::class, 'checkout']);
         Route::post('payments/crypto/checkout', [CryptoController::class, 'checkout']);
+
+        // Feedback (all authenticated users)
+        Route::post('feedback', [FeedbackController::class, 'store']);
+        Route::get('feedback', [FeedbackController::class, 'index']);
+        Route::get('feedback/my', [FeedbackController::class, 'myFeedback']);
 
         // Jarvis (admin + employer only)
         Route::middleware('role:admin,employer')->group(function () {

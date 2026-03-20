@@ -14,7 +14,7 @@ class JobsController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = Job::active()->with(['company:id,name,slug,logo,verified,rating_avg', 'category:id,name,slug,icon']);
+        $query = Job::active()->with(['company:id,name,slug,logo,verified,rating_avg,main_office_countries', 'category:id,name,slug,icon']);
 
         // Keyword search
         if ($q = $request->input('q')) {
@@ -39,6 +39,26 @@ class JobsController extends Controller
         }
         if ($salaryMin = $request->input('salary_min')) {
             $query->where('salary_max', '>=', $salaryMin);
+        }
+
+        // Candidate blocked countries filter — hide jobs from companies in blocked countries
+        $user = $request->user();
+        if ($user && $user->isCandidate()) {
+            $profile = $user->candidateProfile;
+            if ($profile && !empty($profile->blocked_company_countries)) {
+                $blocked = $profile->blocked_company_countries;
+                $query->whereHas('company', function ($q) use ($blocked) {
+                    foreach ($blocked as $country) {
+                        $q->where(function ($sub) use ($country) {
+                            $sub->where('location', 'not like', "%{$country}%")
+                                ->where(function ($inner) use ($country) {
+                                    $inner->whereNull('main_office_countries')
+                                          ->orWhereRaw('NOT JSON_CONTAINS(main_office_countries, ?)', [json_encode($country)]);
+                                });
+                        });
+                    }
+                });
+            }
         }
 
         // Sort

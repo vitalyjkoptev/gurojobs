@@ -4,8 +4,10 @@ import '../../core/theme.dart';
 import '../../core/localization.dart';
 import '../../core/pricing.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/jarvis_provider.dart';
 import '../../providers/lang_provider.dart';
 import '../../providers/theme_provider.dart';
+import '../../widgets/jarvis_fab.dart';
 import '../client/candidate/notifications_screen.dart';
 import '../client/candidate/settings_screen.dart';
 import '../client/candidate/help_screen.dart';
@@ -21,49 +23,164 @@ class AdminDashboardScreen extends StatefulWidget {
 
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   int _currentIndex = 0;
+  bool _jarvisInitialized = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_jarvisInitialized) {
+      _jarvisInitialized = true;
+      context.read<JarvisProvider>().initialize();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     context.watch<LangProvider>();
 
-    return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: [
-          _AdminHomeTab(
-            goToUsers: () => setState(() => _currentIndex = 1),
-            goToJobs: () => setState(() => _currentIndex = 2),
+    final jarvis = context.watch<JarvisProvider>();
+    final jarvisActive = jarvis.isOpen || jarvis.isListening || jarvis.isProcessing;
+
+    return Stack(
+      children: [
+        Scaffold(
+          body: IndexedStack(
+            index: _currentIndex,
+            children: [
+              _AdminHomeTab(
+                goToUsers: () => setState(() => _currentIndex = 1),
+                goToJobs: () => setState(() => _currentIndex = 2),
+              ),
+              const _AdminUsersTab(),
+              const _AdminJobsTab(),
+              const ChatScreen(),
+              const _AdminProfileTab(),
+            ],
           ),
-          const _AdminUsersTab(),
-          const _AdminJobsTab(),
-          const ChatScreen(),
-          const _AdminProfileTab(),
-        ],
-      ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: context.cardBg,
-          boxShadow: [BoxShadow(color: context.shadowMedium, blurRadius: 10, offset: const Offset(0, -2))],
+          bottomNavigationBar: Container(
+            decoration: BoxDecoration(
+              color: context.cardBg,
+              boxShadow: [BoxShadow(color: context.shadowMedium, blurRadius: 10, offset: const Offset(0, -2))],
+            ),
+            child: BottomNavigationBar(
+              currentIndex: _currentIndex > 4 ? 4 : _currentIndex,
+              onTap: (i) {
+                if (i == 5) {
+                  jarvis.togglePanel();
+                } else {
+                  setState(() => _currentIndex = i);
+                }
+              },
+              type: BottomNavigationBarType.fixed,
+              backgroundColor: context.cardBg,
+              selectedItemColor: GuroJobsTheme.primary,
+              unselectedItemColor: context.textHintC,
+              selectedFontSize: 11,
+              unselectedFontSize: 11,
+              elevation: 0,
+              items: [
+                BottomNavigationBarItem(icon: const Icon(Icons.dashboard_outlined), activeIcon: const Icon(Icons.dashboard), label: AppStrings.t('home')),
+                BottomNavigationBarItem(icon: const Icon(Icons.people_outline), activeIcon: const Icon(Icons.people), label: AppStrings.t('adm_users')),
+                BottomNavigationBarItem(icon: const Icon(Icons.work_outline), activeIcon: const Icon(Icons.work), label: AppStrings.t('jobs')),
+                BottomNavigationBarItem(icon: const Icon(Icons.chat_bubble_outline), activeIcon: const Icon(Icons.chat_bubble), label: AppStrings.t('chat')),
+                BottomNavigationBarItem(icon: const Icon(Icons.admin_panel_settings_outlined), activeIcon: const Icon(Icons.admin_panel_settings), label: AppStrings.t('adm_panel')),
+                BottomNavigationBarItem(
+                  icon: _JarvisGlowIcon(active: jarvisActive),
+                  label: AppStrings.t('jarvis'),
+                ),
+              ],
+            ),
+          ),
         ),
-        child: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: (i) => setState(() => _currentIndex = i),
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: context.cardBg,
-          selectedItemColor: GuroJobsTheme.primary,
-          unselectedItemColor: context.textHintC,
-          selectedFontSize: 12,
-          unselectedFontSize: 12,
-          elevation: 0,
-          items: [
-            BottomNavigationBarItem(icon: const Icon(Icons.dashboard_outlined), activeIcon: const Icon(Icons.dashboard), label: AppStrings.t('home')),
-            BottomNavigationBarItem(icon: const Icon(Icons.people_outline), activeIcon: const Icon(Icons.people), label: AppStrings.t('adm_users')),
-            BottomNavigationBarItem(icon: const Icon(Icons.work_outline), activeIcon: const Icon(Icons.work), label: AppStrings.t('jobs')),
-            BottomNavigationBarItem(icon: const Icon(Icons.chat_bubble_outline), activeIcon: const Icon(Icons.chat_bubble), label: AppStrings.t('chat')),
-            BottomNavigationBarItem(icon: const Icon(Icons.admin_panel_settings_outlined), activeIcon: const Icon(Icons.admin_panel_settings), label: AppStrings.t('adm_panel')),
-          ],
-        ),
-      ),
+        // Jarvis chat panel overlay (no FAB button)
+        if (jarvis.isOpen) const _JarvisPanelOverlay(),
+      ],
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// JARVIS GLOW ICON (mic with pulsing glow when active)
+// ═══════════════════════════════════════════════════════════════
+class _JarvisGlowIcon extends StatefulWidget {
+  final bool active;
+  const _JarvisGlowIcon({required this.active});
+
+  @override
+  State<_JarvisGlowIcon> createState() => _JarvisGlowIconState();
+}
+
+class _JarvisGlowIconState extends State<_JarvisGlowIcon> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
+    _animation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+    if (widget.active) _controller.repeat(reverse: true);
+  }
+
+  @override
+  void didUpdateWidget(_JarvisGlowIcon oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.active && !_controller.isAnimating) {
+      _controller.repeat(reverse: true);
+    } else if (!widget.active && _controller.isAnimating) {
+      _controller.stop();
+      _controller.reset();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!widget.active) {
+      return const Icon(Icons.mic_none);
+    }
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        return Container(
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: GuroJobsTheme.primary.withValues(alpha: 0.3 + _animation.value * 0.5),
+                blurRadius: 8 + _animation.value * 12,
+                spreadRadius: _animation.value * 4,
+              ),
+            ],
+          ),
+          child: Icon(Icons.mic, color: GuroJobsTheme.primary, size: 24),
+        );
+      },
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// JARVIS PANEL OVERLAY (chat panel without FAB)
+// ═══════════════════════════════════════════════════════════════
+class _JarvisPanelOverlay extends StatelessWidget {
+  const _JarvisPanelOverlay();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Positioned.fill(
+      child: JarvisFab(),
     );
   }
 }

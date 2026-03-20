@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\CandidateProfile;
 use App\Models\Job;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -102,6 +103,64 @@ class SearchController extends Controller
         $positions = $query->orderBy('title')->get(['title', 'category_slug', 'experience_level']);
 
         return response()->json(['success' => true, 'data' => $positions]);
+    }
+
+    /**
+     * Search candidates — employer filters (blocked citizenships, location pref).
+     * GET /api/v1/search/candidates
+     */
+    public function candidates(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $company = $user->ownedCompany ?? $user->company;
+
+        $query = CandidateProfile::with('user:id,name,avatar,last_seen_at,created_at')
+            ->whereHas('user', fn($q) => $q->where('status', 'active'));
+
+        // Keyword search (skills, headline, bio)
+        if ($q = $request->input('q')) {
+            $query->where(function ($sub) use ($q) {
+                $sub->where('headline', 'like', "%{$q}%")
+                    ->orWhere('bio', 'like', "%{$q}%")
+                    ->orWhereRaw("JSON_SEARCH(skills, 'one', ?) IS NOT NULL", ["%{$q}%"]);
+            });
+        }
+
+        // Experience level filter
+        if ($level = $request->input('experience_level')) {
+            $query->where('experience_level', $level);
+        }
+
+        // Availability filter
+        if ($avail = $request->input('availability')) {
+            $query->where('availability', $avail);
+        }
+
+        // Location filter
+        if ($loc = $request->input('location')) {
+            $query->where('location', 'like', "%{$loc}%");
+        }
+
+        // Employer: blocked candidate citizenships
+        if ($company && !empty($company->blocked_candidate_citizenships)) {
+            $blocked = $company->blocked_candidate_citizenships;
+            $query->where(function ($sub) use ($blocked) {
+                $sub->whereNull('citizenship_country')
+                    ->orWhereNotIn('citizenship_country', $blocked);
+            });
+        }
+
+        // Employer: show only candidates outside their citizenship country
+        if ($company && $company->candidate_location_pref === 'outside') {
+            $query->where(function ($sub) {
+                $sub->where('in_citizenship_country', false)
+                    ->orWhereNull('in_citizenship_country');
+            });
+        }
+
+        $candidates = $query->latest()->paginate($request->input('per_page', 20));
+
+        return response()->json($candidates);
     }
 
     /**

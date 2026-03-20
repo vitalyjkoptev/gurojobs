@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme.dart';
 import '../../../core/localization.dart';
+import '../../../core/countries.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../services/api_service.dart';
+import '../../../widgets/filter_pickers.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -21,6 +23,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late TextEditingController _locationController;
   late TextEditingController _bioController;
   bool _saving = false;
+  bool _loaded = false;
+
+  // Filter fields
+  String? _commLangPriority;
+  List<String> _commLangsAcceptable = [];
+  String? _citizenshipCountry;
+  bool? _inCitizenshipCountry;
+  List<String> _blockedCompanyCountries = [];
 
   @override
   void initState() {
@@ -38,18 +48,28 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Future<void> _loadProfile() async {
     try {
       final data = await ApiService.getProfile();
-      if (data['success'] == true && data['profile'] != null) {
-        final p = data['profile'];
-        if (mounted) {
+      if (data['success'] == true && data['data'] != null) {
+        final d = data['data'];
+        final user = d['user'];
+        final p = d['profile'];
+        if (mounted && p != null) {
           setState(() {
-            _phoneController.text = p['phone'] ?? '';
-            _telegramController.text = p['telegram_username'] ?? '';
+            _phoneController.text = user?['phone'] ?? '';
+            _telegramController.text = p['telegram'] ?? '';
             _locationController.text = p['location'] ?? '';
             _bioController.text = p['bio'] ?? '';
+            _commLangPriority = p['communication_language_priority'];
+            _commLangsAcceptable = List<String>.from(p['communication_languages_acceptable'] ?? []);
+            _citizenshipCountry = p['citizenship_country'];
+            _inCitizenshipCountry = p['in_citizenship_country'];
+            _blockedCompanyCountries = List<String>.from(p['blocked_company_countries'] ?? []);
+            _loaded = true;
           });
         }
       }
-    } catch (_) {}
+    } catch (_) {
+      if (mounted) setState(() => _loaded = true);
+    }
   }
 
   @override
@@ -67,18 +87,31 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _saving = true);
     try {
-      await ApiService.updateProfile({
+      final fields = <String, dynamic>{
         'name': _nameController.text,
         'phone': _phoneController.text,
-        'telegram_username': _telegramController.text,
+        'telegram': _telegramController.text,
         'location': _locationController.text,
         'bio': _bioController.text,
-      });
+      };
+      if (_commLangPriority != null) fields['communication_language_priority'] = _commLangPriority!;
+      if (_citizenshipCountry != null) fields['citizenship_country'] = _citizenshipCountry!;
+      if (_inCitizenshipCountry != null) fields['in_citizenship_country'] = _inCitizenshipCountry! ? '1' : '0';
+
+      // Arrays need special form-encoding
+      for (int i = 0; i < _commLangsAcceptable.length; i++) {
+        fields['communication_languages_acceptable[$i]'] = _commLangsAcceptable[i];
+      }
+      for (int i = 0; i < _blockedCompanyCountries.length; i++) {
+        fields['blocked_company_countries[$i]'] = _blockedCompanyCountries[i];
+      }
+
+      await ApiService.updateProfile(fields);
     } catch (_) {}
     if (mounted) {
       setState(() => _saving = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: const Text('Profile updated!'), backgroundColor: GuroJobsTheme.success, behavior: SnackBarBehavior.floating, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+        SnackBar(content: Text(AppStrings.t('profile_updated')), backgroundColor: GuroJobsTheme.success, behavior: SnackBarBehavior.floating, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
       );
     }
   }
@@ -92,6 +125,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         child: Form(
           key: _formKey,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Center(
                 child: Stack(
@@ -127,7 +161,67 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               _field(AppStrings.t('telegram'), _telegramController, Icons.send_outlined, hint: AppStrings.t('telegram_hint')),
               _field('Location', _locationController, Icons.location_on_outlined, hint: 'City, Country'),
               _field('About me', _bioController, Icons.info_outline, maxLines: 4, hint: 'Tell employers about yourself...'),
-              const SizedBox(height: 24),
+
+              const SizedBox(height: 20),
+
+              // ── Communication Preferences ──
+              _sectionTitle(AppStrings.t('communication_preferences')),
+              const SizedBox(height: 12),
+
+              SingleSelectPicker(
+                label: AppStrings.t('priority_language'),
+                value: _commLangPriority,
+                items: RefCountries.languageNames(),
+                hint: AppStrings.t('select_language'),
+                icon: Icons.language,
+                onChanged: (v) => setState(() => _commLangPriority = v),
+              ),
+              const SizedBox(height: 14),
+
+              MultiSelectChipsPicker(
+                label: AppStrings.t('acceptable_languages'),
+                selected: _commLangsAcceptable,
+                items: RefCountries.languageNames(),
+                hint: AppStrings.t('select_languages_hint'),
+                icon: Icons.translate,
+                maxSelect: 3,
+                onChanged: (v) => setState(() => _commLangsAcceptable = v),
+              ),
+
+              const SizedBox(height: 20),
+
+              // ── Country Filters ──
+              _sectionTitle(AppStrings.t('candidate_filters')),
+              const SizedBox(height: 12),
+
+              SingleSelectPicker(
+                label: AppStrings.t('citizenship_country'),
+                value: _citizenshipCountry,
+                items: RefCountries.countryNames(),
+                hint: AppStrings.t('select_country'),
+                icon: Icons.flag_outlined,
+                onChanged: (v) => setState(() => _citizenshipCountry = v),
+              ),
+              const SizedBox(height: 14),
+
+              YesNoToggle(
+                label: AppStrings.t('in_citizenship_country'),
+                value: _inCitizenshipCountry,
+                onChanged: (v) => setState(() => _inCitizenshipCountry = v),
+              ),
+              const SizedBox(height: 14),
+
+              MultiSelectChipsPicker(
+                label: AppStrings.t('blocked_company_countries'),
+                selected: _blockedCompanyCountries,
+                items: RefCountries.countryNames(),
+                hint: AppStrings.t('blocked_countries_hint'),
+                icon: Icons.block,
+                maxSelect: 20,
+                onChanged: (v) => setState(() => _blockedCompanyCountries = v),
+              ),
+
+              const SizedBox(height: 30),
               SizedBox(
                 width: double.infinity, height: 52,
                 child: ElevatedButton(
@@ -135,13 +229,25 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   style: ElevatedButton.styleFrom(backgroundColor: GuroJobsTheme.primary, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
                   child: _saving
                       ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
-                      : const Text('Save Changes', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                      : Text(AppStrings.t('save_changes'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                 ),
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _sectionTitle(String text) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+      decoration: BoxDecoration(
+        color: GuroJobsTheme.primary.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(text, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: GuroJobsTheme.primary)),
     );
   }
 

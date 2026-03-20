@@ -27,6 +27,14 @@ class WebAuthController extends Controller
             'password' => ['required', 'confirmed', Password::min(8)],
             'role' => 'required|in:employer,candidate',
             'terms' => 'accepted',
+            'communication_language_priority' => 'nullable|string|max:10',
+            'communication_languages_acceptable' => 'nullable|array',
+            'citizenship_country' => 'nullable|string|max:100',
+            'in_citizenship_country' => 'nullable|boolean',
+            'blocked_company_countries' => 'nullable|array',
+            'main_office_countries' => 'nullable|array',
+            'blocked_candidate_citizenships' => 'nullable|array',
+            'candidate_location_pref' => 'nullable|string|in:outside,all',
         ]);
 
         $user = User::create([
@@ -37,15 +45,27 @@ class WebAuthController extends Controller
             'status' => 'active',
         ]);
 
-        // Create empty profile based on role
+        // Create profile with filter preferences
         if ($data['role'] === 'candidate') {
-            CandidateProfile::create(['user_id' => $user->id]);
+            CandidateProfile::create([
+                'user_id' => $user->id,
+                'communication_language_priority' => $data['communication_language_priority'] ?? null,
+                'communication_languages_acceptable' => $data['communication_languages_acceptable'] ?? null,
+                'citizenship_country' => $data['citizenship_country'] ?? null,
+                'in_citizenship_country' => $data['in_citizenship_country'] ?? null,
+                'blocked_company_countries' => $data['blocked_company_countries'] ?? null,
+            ]);
         } elseif ($data['role'] === 'employer') {
             Company::create([
                 'user_id' => $user->id,
                 'name' => $data['name'] . "'s Company",
                 'slug' => \Str::slug($data['name'] . '-' . $user->id),
                 'plan' => 'free',
+                'communication_language_priority' => $data['communication_language_priority'] ?? null,
+                'communication_languages_acceptable' => $data['communication_languages_acceptable'] ?? null,
+                'main_office_countries' => $data['main_office_countries'] ?? null,
+                'blocked_candidate_citizenships' => $data['blocked_candidate_citizenships'] ?? null,
+                'candidate_location_pref' => $data['candidate_location_pref'] ?? 'all',
             ]);
         }
 

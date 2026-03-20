@@ -12,8 +12,10 @@ class CandidateProfile extends Model
     protected $fillable = [
         'user_id', 'headline', 'bio', 'resume_path', 'resume_data',
         'experience_level', 'skills', 'languages',
+        'communication_language_priority', 'communication_languages_acceptable',
         'salary_min', 'salary_max', 'salary_currency',
         'availability', 'location', 'remote_ok',
+        'citizenship_country', 'in_citizenship_country', 'blocked_company_countries',
         'linkedin', 'github', 'portfolio', 'telegram',
         'rating_avg', 'rating_count', 'resume_updated_at',
     ];
@@ -22,8 +24,11 @@ class CandidateProfile extends Model
         'experience_level' => ExperienceLevel::class,
         'skills' => 'array',
         'languages' => 'array',
+        'communication_languages_acceptable' => 'array',
+        'blocked_company_countries' => 'array',
         'resume_data' => 'array',
         'remote_ok' => 'boolean',
+        'in_citizenship_country' => 'boolean',
         'rating_avg' => 'decimal:2',
         'salary_min' => 'decimal:2',
         'salary_max' => 'decimal:2',

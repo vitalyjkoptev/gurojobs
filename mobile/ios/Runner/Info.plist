@@ -41,6 +41,10 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>GURO JOBS uses speech recognition for Jarvis AI voice assistant</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>GURO JOBS needs microphone access for Jarvis voice commands</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>

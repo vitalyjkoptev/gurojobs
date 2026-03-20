@@ -98,6 +98,97 @@
                                 </div>
                             </div>
 
+                            <!-- Communication Preferences -->
+                            <div class="mb-3 mt-3" style="padding: 12px; background: #f8f9ff; border-radius: 10px;">
+                                <label class="form-label" style="font-weight: 700; font-size: 14px; color: var(--guro-primary);">Communication Preferences</label>
+
+                                <div class="mb-2">
+                                    <label for="communication_language_priority" class="form-label" style="font-weight: 600; font-size: 13px;">Priority Language</label>
+                                    <select class="form-select" id="communication_language_priority" name="communication_language_priority">
+                                        <option value="">Select language...</option>
+                                        @foreach(['English','German','Polish','Russian','Ukrainian','French','Spanish','Portuguese','Italian','Dutch','Swedish','Danish','Norwegian','Finnish','Greek','Czech','Romanian','Bulgarian','Croatian','Serbian','Hungarian','Turkish','Japanese','Korean','Chinese','Arabic','Hindi','Thai','Georgian','Hebrew','Vietnamese'] as $lang)
+                                            <option value="{{ $lang }}">{{ $lang }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="mb-2">
+                                    <label class="form-label" style="font-weight: 600; font-size: 13px;">Acceptable Languages (up to 3)</label>
+                                    <select class="form-select" id="comm_langs_acceptable" name="communication_languages_acceptable[]" multiple size="4">
+                                        @foreach(['English','German','Polish','Russian','Ukrainian','French','Spanish','Portuguese','Italian','Dutch','Swedish','Danish','Norwegian','Finnish','Greek','Czech','Romanian','Bulgarian','Croatian','Serbian','Hungarian','Turkish'] as $lang)
+                                            <option value="{{ $lang }}">{{ $lang }}</option>
+                                        @endforeach
+                                    </select>
+                                    <div class="form-text">Hold Ctrl/Cmd to select multiple</div>
+                                </div>
+                            </div>
+
+                            <!-- Candidate-specific filters -->
+                            <div class="candidate-filters mb-3" style="padding: 12px; background: #f0faf5; border-radius: 10px; display: none;">
+                                <label class="form-label" style="font-weight: 700; font-size: 14px; color: #28a745;">Country & Citizenship</label>
+
+                                <div class="mb-2">
+                                    <label for="citizenship_country" class="form-label" style="font-weight: 600; font-size: 13px;">Country of Citizenship</label>
+                                    <select class="form-select" id="citizenship_country" name="citizenship_country">
+                                        <option value="">Select country...</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-2">
+                                    <label class="form-label" style="font-weight: 600; font-size: 13px;">Are you in your citizenship country?</label>
+                                    <div class="d-flex gap-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="in_citizenship_country" id="in_country_yes" value="1">
+                                            <label class="form-check-label" for="in_country_yes">Yes</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="in_citizenship_country" id="in_country_no" value="0">
+                                            <label class="form-check-label" for="in_country_no">No</label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-2">
+                                    <label class="form-label" style="font-weight: 600; font-size: 13px;">Block Company Countries</label>
+                                    <select class="form-select" name="blocked_company_countries[]" multiple size="4">
+                                    </select>
+                                    <div class="form-text">Countries where you don't want to work</div>
+                                </div>
+                            </div>
+
+                            <!-- Employer-specific filters -->
+                            <div class="employer-filters mb-3" style="padding: 12px; background: #f0f5ff; border-radius: 10px; display: none;">
+                                <label class="form-label" style="font-weight: 700; font-size: 14px; color: #015EA7;">Candidate Preferences</label>
+
+                                <div class="mb-2">
+                                    <label class="form-label" style="font-weight: 600; font-size: 13px;">Main Office Country</label>
+                                    <select class="form-select" name="main_office_countries[]" multiple size="4">
+                                    </select>
+                                    <div class="form-text">Select one or more countries</div>
+                                </div>
+
+                                <div class="mb-2">
+                                    <label class="form-label" style="font-weight: 600; font-size: 13px;">Block Candidate Citizenships</label>
+                                    <select class="form-select" name="blocked_candidate_citizenships[]" multiple size="4">
+                                    </select>
+                                    <div class="form-text">Citizenships you can't offer jobs to</div>
+                                </div>
+
+                                <div class="mb-2">
+                                    <label class="form-label" style="font-weight: 600; font-size: 13px;">Show Candidates</label>
+                                    <div class="d-flex gap-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="candidate_location_pref" id="pref_all" value="all" checked>
+                                            <label class="form-check-label" for="pref_all">All candidates</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="candidate_location_pref" id="pref_outside" value="outside">
+                                            <label class="form-check-label" for="pref_outside">Outside citizenship country</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="mb-4">
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" name="terms" id="terms" required>
@@ -109,19 +200,6 @@
 
                             <button type="submit" class="btn-guro">Create Account</button>
                         </form>
-
-                        <!-- Demo Skip Buttons -->
-                        <div style="margin-top: 24px; padding-top: 20px; border-top: 2px dashed #eee;">
-                            <p style="text-align: center; font-size: 12px; color: #999; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">⚡ Quick Demo — Skip Registration</p>
-                            <div class="d-flex gap-2">
-                                <a href="{{ route('demo.login', ['role' => 'employer']) }}" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 12px; border: 2px dashed #ccc; border-radius: 10px; background: #e8f0fe; color: #015EA7; font-weight: 700; font-size: 13px; text-decoration: none; transition: all 0.3s;">
-                                    🏢 Employer
-                                </a>
-                                <a href="{{ route('demo.login', ['role' => 'candidate']) }}" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 12px; border: 2px dashed #ccc; border-radius: 10px; background: #e8f5e9; color: #28a745; font-weight: 700; font-size: 13px; text-decoration: none; transition: all 0.3s;">
-                                    👤 Candidate
-                                </a>
-                            </div>
-                        </div>
 
                         <div class="text-center mt-4" style="font-size: 14px; color: #666;">
                             Already have an account?
@@ -149,5 +227,39 @@
             console.error('Passkey error:', error);
         }
     }
+
+    // Countries list for selects
+    const countries = [
+        'Albania','Andorra','Armenia','Austria','Azerbaijan','Belarus','Belgium','Bosnia and Herzegovina',
+        'Brazil','Bulgaria','Canada','Chile','China','Colombia','Croatia','Curaçao','Cyprus','Czech Republic',
+        'Denmark','Estonia','Finland','France','Georgia','Germany','Gibraltar','Greece','Hungary','Iceland',
+        'India','Indonesia','Ireland','Isle of Man','Israel','Italy','Japan','Kazakhstan','Kenya','Kosovo',
+        'Kyrgyzstan','Latvia','Lithuania','Luxembourg','Malaysia','Malta','Mexico','Moldova','Montenegro',
+        'Netherlands','New Zealand','Nigeria','North Macedonia','Norway','Peru','Philippines','Poland','Portugal',
+        'Romania','Russia','Serbia','Singapore','Slovakia','Slovenia','South Africa','South Korea','Spain',
+        'Sweden','Switzerland','Tajikistan','Thailand','Turkey','Ukraine','United Arab Emirates','United Kingdom',
+        'United States','Uzbekistan','Vietnam'
+    ];
+
+    // Populate all country selects
+    document.querySelectorAll('select[name="citizenship_country"], select[name="blocked_company_countries[]"], select[name="main_office_countries[]"], select[name="blocked_candidate_citizenships[]"]').forEach(sel => {
+        const hasPlaceholder = sel.name === 'citizenship_country';
+        countries.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c; opt.textContent = c;
+            sel.appendChild(opt);
+        });
+    });
+
+    // Toggle role-specific filters
+    document.querySelectorAll('input[name="role"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            document.querySelector('.candidate-filters').style.display = this.value === 'candidate' ? 'block' : 'none';
+            document.querySelector('.employer-filters').style.display = this.value === 'employer' ? 'block' : 'none';
+        });
+    });
+
+    // Show candidate filters by default (candidate is checked)
+    document.querySelector('.candidate-filters').style.display = 'block';
 </script>
 @endpush

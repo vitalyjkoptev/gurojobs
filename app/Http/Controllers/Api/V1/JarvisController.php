@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Services\Jarvis\JarvisService;
 use Illuminate\Http\JsonResponse;
@@ -26,7 +27,8 @@ class JarvisController extends Controller
         $user = $request->user();
 
         // Only admin and employer can use Jarvis
-        if (!in_array($user->role, ['admin', 'employer'])) {
+        $role = $user->role instanceof UserRole ? $user->role->value : $user->role;
+        if (!in_array($role, ['admin', 'employer'])) {
             return response()->json([
                 'success' => false,
                 'response' => 'Jarvis is available for admin and employer accounts only.',

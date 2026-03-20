@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/theme.dart';
 import 'providers/auth_provider.dart';
+import 'providers/jarvis_provider.dart';
 import 'providers/lang_provider.dart';
 import 'providers/theme_provider.dart';
 import 'screens/client/candidate/splash_screen.dart';
@@ -28,6 +29,7 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider(prefs)),
+        ChangeNotifierProvider(create: (_) => JarvisProvider()),
         ChangeNotifierProvider(create: (_) => LangProvider(prefs)),
         ChangeNotifierProvider(create: (_) => ThemeProvider(prefs)),
       ],

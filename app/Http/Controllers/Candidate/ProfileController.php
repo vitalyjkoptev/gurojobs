@@ -50,12 +50,19 @@ class ProfileController extends Controller
             'experience_level' => 'sometimes|string',
             'skills' => 'sometimes|array',
             'languages' => 'sometimes|array',
+            'communication_language_priority' => 'sometimes|string|max:10',
+            'communication_languages_acceptable' => 'sometimes|array',
+            'communication_languages_acceptable.*' => 'string|max:10',
             'salary_min' => 'sometimes|numeric|min:0',
             'salary_max' => 'sometimes|numeric|min:0',
             'salary_currency' => 'sometimes|string|max:3',
             'availability' => 'sometimes|string|in:actively_looking,open,not_looking',
             'location' => 'sometimes|string|max:255',
             'remote_ok' => 'sometimes|boolean',
+            'citizenship_country' => 'sometimes|string|max:100',
+            'in_citizenship_country' => 'sometimes|boolean',
+            'blocked_company_countries' => 'sometimes|array',
+            'blocked_company_countries.*' => 'string|max:100',
             'linkedin' => 'sometimes|string|max:255',
             'github' => 'sometimes|string|max:255',
             'portfolio' => 'sometimes|string|max:255',
@@ -66,8 +73,10 @@ class ProfileController extends Controller
 
         $profileData = $request->only([
             'headline', 'bio', 'experience_level', 'skills', 'languages',
+            'communication_language_priority', 'communication_languages_acceptable',
             'salary_min', 'salary_max', 'salary_currency',
             'availability', 'location', 'remote_ok',
+            'citizenship_country', 'in_citizenship_country', 'blocked_company_countries',
             'linkedin', 'github', 'portfolio', 'telegram',
         ]);
 

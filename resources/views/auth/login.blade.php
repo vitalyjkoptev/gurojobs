@@ -69,11 +69,6 @@
         justify-content: center;
         gap: 8px;
     }
-    .btn-admin {
-        background: linear-gradient(135deg, #dc3545, #c82333);
-        color: #fff;
-    }
-    .btn-admin:hover { background: linear-gradient(135deg, #c82333, #a71d2a); }
     .btn-employer {
         background: linear-gradient(135deg, var(--guro-primary, #015EA7), var(--guro-primary-dark, #014A85));
         color: #fff;
@@ -237,10 +232,7 @@
 
                         <!-- Role Tabs -->
                         <div class="login-tabs">
-                            <button class="login-tab active" data-role="admin" onclick="switchTab('admin')">
-                                Admin
-                            </button>
-                            <button class="login-tab" data-role="employer" onclick="switchTab('employer')">
+                            <button class="login-tab active" data-role="employer" onclick="switchTab('employer')">
                                 Employer
                             </button>
                             <button class="login-tab" data-role="candidate" onclick="switchTab('candidate')">
@@ -248,38 +240,8 @@
                             </button>
                         </div>
 
-                        <!-- ═══════ ADMIN Panel ═══════ -->
-                        <div class="login-panel active" id="panel-admin">
-                            <span class="role-badge admin">Admin Access</span>
-                            <div class="quick-login-hint admin">
-                                Admin panel access. Only authorized personnel.
-                            </div>
-
-                            <form method="POST" action="{{ route('login') }}">
-                                @csrf
-                                <input type="hidden" name="login_role" value="admin">
-                                <div class="mb-3">
-                                    <label class="form-label" style="font-weight:600;font-size:14px;">Email</label>
-                                    <input type="email" class="form-control" name="email" value="{{ old('email') }}" placeholder="admin@gurojobs.com" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label" style="font-weight:600;font-size:14px;">Password</label>
-                                    <input type="password" class="form-control" name="password" placeholder="Admin password" required>
-                                </div>
-                                <div class="mb-4">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="remember" id="remember-admin">
-                                        <label class="form-check-label" for="remember-admin" style="font-size:14px;">Remember me</label>
-                                    </div>
-                                </div>
-                                <button type="submit" class="btn-guro btn-admin">
-                                    Sign In as Admin
-                                </button>
-                            </form>
-                        </div>
-
                         <!-- ═══════ EMPLOYER Panel ═══════ -->
-                        <div class="login-panel" id="panel-employer">
+                        <div class="login-panel active" id="panel-employer">
                             <span class="role-badge employer">Employer</span>
                             <div class="quick-login-hint employer">
                                 Post iGaming jobs, manage applicants, and grow your team.
@@ -324,10 +286,6 @@
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
                                 Sign in with Telegram
                             </button>
-
-                            <a href="{{ route('demo.login', ['role' => 'employer']) }}" class="btn-skip-demo">
-                                Skip — Demo Employer Dashboard
-                            </a>
 
                             <div class="text-center mt-4" style="font-size:14px;color:#666;">
                                 Don't have an account?
@@ -381,10 +339,6 @@
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
                                 Sign in with Telegram
                             </button>
-
-                            <a href="{{ route('demo.login', ['role' => 'candidate']) }}" class="btn-skip-demo">
-                                Skip — Demo Candidate Dashboard
-                            </a>
 
                             <div class="text-center mt-4" style="font-size:14px;color:#666;">
                                 Don't have an account?

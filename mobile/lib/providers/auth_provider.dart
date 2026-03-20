@@ -51,6 +51,15 @@ class AuthProvider extends ChangeNotifier {
     required String role,
     String? phone,
     String? telegramUsername,
+    // Filter fields
+    String? commLangPriority,
+    List<String>? commLangsAcceptable,
+    String? citizenshipCountry,
+    bool? inCitizenshipCountry,
+    List<String>? blockedCompanyCountries,
+    List<String>? mainOfficeCountries,
+    List<String>? blockedCandidateCitizenships,
+    String? candidateLocationPref,
   }) async {
     _isLoading = true;
     _errorMessage = null;
@@ -65,6 +74,14 @@ class AuthProvider extends ChangeNotifier {
         role: role,
         phone: phone,
         telegramUsername: telegramUsername,
+        commLangPriority: commLangPriority,
+        commLangsAcceptable: commLangsAcceptable,
+        citizenshipCountry: citizenshipCountry,
+        inCitizenshipCountry: inCitizenshipCountry,
+        blockedCompanyCountries: blockedCompanyCountries,
+        mainOfficeCountries: mainOfficeCountries,
+        blockedCandidateCitizenships: blockedCandidateCitizenships,
+        candidateLocationPref: candidateLocationPref,
       );
 
       if (response['token'] != null) {

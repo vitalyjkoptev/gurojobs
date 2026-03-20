@@ -21,7 +21,24 @@ class JarvisService
     {
         $intent = $this->intentParser->parse($commandText);
 
-        $result = $this->commandExecutor->execute($intent, $user);
+        // For intents that need data (stats, jobs, etc.) — execute command
+        // For AI-parsed intents with response (greeting, help, etc.) — use AI response directly
+        $dataIntents = ['stats.today', 'stats.period', 'jobs.list', 'jobs.create', 'jobs.update',
+            'users.list', 'users.block', 'applications.list', 'payments.status', 'search',
+            'report.generate', 'navigation'];
+
+        if (in_array($intent['intent'], $dataIntents)) {
+            $result = $this->commandExecutor->execute($intent, $user);
+        } elseif (!empty($intent['ai_response'])) {
+            // AI provided a direct response (greeting, help, profile, settings, etc.)
+            $result = [
+                'success' => true,
+                'response' => $intent['ai_response'],
+                'action' => $intent['intent'],
+            ];
+        } else {
+            $result = $this->commandExecutor->execute($intent, $user);
+        }
 
         $log = JarvisLog::create([
             'user_id' => $user->id,

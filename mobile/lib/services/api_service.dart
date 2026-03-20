@@ -71,6 +71,15 @@ class ApiService {
     required String role,
     String? phone,
     String? telegramUsername,
+    // Filter fields
+    String? commLangPriority,
+    List<String>? commLangsAcceptable,
+    String? citizenshipCountry,
+    bool? inCitizenshipCountry,
+    List<String>? blockedCompanyCountries,
+    List<String>? mainOfficeCountries,
+    List<String>? blockedCandidateCitizenships,
+    String? candidateLocationPref,
   }) async {
     final fields = <String, String>{
       'name': name,
@@ -82,6 +91,39 @@ class ApiService {
     if (phone != null && phone.isNotEmpty) fields['phone'] = phone;
     if (telegramUsername != null && telegramUsername.isNotEmpty) {
       fields['telegram_username'] = telegramUsername;
+    }
+    // Filter fields — form-encoded arrays
+    if (commLangPriority != null && commLangPriority.isNotEmpty) {
+      fields['communication_language_priority'] = commLangPriority;
+    }
+    if (commLangsAcceptable != null && commLangsAcceptable.isNotEmpty) {
+      for (int i = 0; i < commLangsAcceptable.length; i++) {
+        fields['communication_languages_acceptable[$i]'] = commLangsAcceptable[i];
+      }
+    }
+    if (citizenshipCountry != null && citizenshipCountry.isNotEmpty) {
+      fields['citizenship_country'] = citizenshipCountry;
+    }
+    if (inCitizenshipCountry != null) {
+      fields['in_citizenship_country'] = inCitizenshipCountry ? '1' : '0';
+    }
+    if (blockedCompanyCountries != null && blockedCompanyCountries.isNotEmpty) {
+      for (int i = 0; i < blockedCompanyCountries.length; i++) {
+        fields['blocked_company_countries[$i]'] = blockedCompanyCountries[i];
+      }
+    }
+    if (mainOfficeCountries != null && mainOfficeCountries.isNotEmpty) {
+      for (int i = 0; i < mainOfficeCountries.length; i++) {
+        fields['main_office_countries[$i]'] = mainOfficeCountries[i];
+      }
+    }
+    if (blockedCandidateCitizenships != null && blockedCandidateCitizenships.isNotEmpty) {
+      for (int i = 0; i < blockedCandidateCitizenships.length; i++) {
+        fields['blocked_candidate_citizenships[$i]'] = blockedCandidateCitizenships[i];
+      }
+    }
+    if (candidateLocationPref != null && candidateLocationPref.isNotEmpty) {
+      fields['candidate_location_pref'] = candidateLocationPref;
     }
 
     final response = await _postForm('$baseUrl/register', fields);
@@ -119,6 +161,27 @@ class ApiService {
     final response = await http.get(
       Uri.parse('$baseUrl/me'),
       headers: _headers(token: token),
+    );
+    return jsonDecode(response.body);
+  }
+
+  // ── Employer Company ─────────────────────────────────
+  static Future<Map<String, dynamic>> getEmployerCompany() async {
+    final token = await getToken();
+    final response = await http.get(
+      Uri.parse('$baseUrl/employer/company'),
+      headers: _headers(token: token),
+    );
+    return jsonDecode(response.body);
+  }
+
+  static Future<Map<String, dynamic>> updateEmployerCompany(Map<String, dynamic> data) async {
+    final token = await getToken();
+    final fields = data.map((k, v) => MapEntry(k, v?.toString() ?? ''));
+    final response = await _putForm(
+      '$baseUrl/employer/company',
+      fields,
+      token: token,
     );
     return jsonDecode(response.body);
   }
@@ -327,6 +390,26 @@ class ApiService {
     final token = await getToken();
     final response = await http.get(
       Uri.parse('$baseUrl/candidates/$id'),
+      headers: _headers(token: token),
+    );
+    return jsonDecode(response.body);
+  }
+
+  // ── Jarvis AI ───────────────────────────────────────
+  static Future<Map<String, dynamic>> jarvisCommand(String command, {String type = 'text'}) async {
+    final token = await getToken();
+    final response = await _postForm(
+      '$baseUrl/jarvis/command',
+      {'command': command, 'type': type},
+      token: token,
+    );
+    return jsonDecode(response.body);
+  }
+
+  static Future<Map<String, dynamic>> jarvisHistory({int limit = 50}) async {
+    final token = await getToken();
+    final response = await http.get(
+      Uri.parse('$baseUrl/jarvis/history?limit=$limit'),
       headers: _headers(token: token),
     );
     return jsonDecode(response.body);
