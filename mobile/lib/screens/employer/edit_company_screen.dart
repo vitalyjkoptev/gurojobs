@@ -20,6 +20,7 @@ class _EditCompanyScreenState extends State<EditCompanyScreen> {
   final _descriptionCtrl = TextEditingController();
   final _websiteCtrl = TextEditingController();
   final _locationCtrl = TextEditingController();
+  final _telegramCtrl = TextEditingController();
   bool _saving = false;
 
   // Filter fields
@@ -49,6 +50,7 @@ class _EditCompanyScreenState extends State<EditCompanyScreen> {
             _descriptionCtrl.text = company['description'] ?? '';
             _websiteCtrl.text = company['website'] ?? '';
             _locationCtrl.text = company['location'] ?? '';
+            _telegramCtrl.text = company['telegram'] ?? '';
             _commLangPriority = company['communication_language_priority'];
             _commLangsAcceptable = List<String>.from(company['communication_languages_acceptable'] ?? []);
             _mainOfficeCountries = List<String>.from(company['main_office_countries'] ?? []);
@@ -66,6 +68,7 @@ class _EditCompanyScreenState extends State<EditCompanyScreen> {
     _descriptionCtrl.dispose();
     _websiteCtrl.dispose();
     _locationCtrl.dispose();
+    _telegramCtrl.dispose();
     super.dispose();
   }
 
@@ -78,6 +81,7 @@ class _EditCompanyScreenState extends State<EditCompanyScreen> {
         'description': _descriptionCtrl.text,
         'website': _websiteCtrl.text,
         'location': _locationCtrl.text,
+        'telegram': _telegramCtrl.text,
         'candidate_location_pref': _candidateLocationPref,
       };
       if (_commLangPriority != null) fields['communication_language_priority'] = _commLangPriority!;
@@ -115,6 +119,7 @@ class _EditCompanyScreenState extends State<EditCompanyScreen> {
               _field('Company Name', _companyNameCtrl, Icons.business, validator: (v) => (v == null || v.isEmpty) ? 'Enter company name' : null),
               _field('Description', _descriptionCtrl, Icons.description_outlined, maxLines: 3, hint: 'About your company...'),
               _field('Website', _websiteCtrl, Icons.language, hint: 'https://...'),
+              _field('Telegram', _telegramCtrl, Icons.send, hint: '@company_username'),
               _field('Location', _locationCtrl, Icons.location_on_outlined, hint: 'Malta, Cyprus...'),
 
               const SizedBox(height: 20),

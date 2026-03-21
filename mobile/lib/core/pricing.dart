@@ -1,10 +1,52 @@
-/// Global contact unlock pricing — editable by admin
+/// Plan-based daily contact limits & features
 class ContactPricing {
-  static double telegramPrice = 5.0;
-  static double linkedinPrice = 5.0;
-  static double chatPrice = 5.0;
+  /// Daily contact reveal limits per plan
+  static const Map<String, int> dailyLimits = {
+    'free': 0,
+    'basic': 10,
+    'premium': 50,
+    'vip': 999999, // unlimited
+  };
 
-  static String get telegramPriceStr => '\$${telegramPrice.toStringAsFixed(0)}';
-  static String get linkedinPriceStr => '\$${linkedinPrice.toStringAsFixed(0)}';
-  static String get chatPriceStr => '\$${chatPrice.toStringAsFixed(0)}';
+  /// Plan prices (USD/month)
+  static const Map<String, double> prices = {
+    'free': 0,
+    'basic': 10,
+    'premium': 35,
+    'vip': 65,
+  };
+
+  /// Plan names for display
+  static const Map<String, String> planNames = {
+    'free': 'Free',
+    'basic': 'Basic',
+    'premium': 'Premium',
+    'vip': 'VIP',
+  };
+
+  /// Team members limit per plan
+  static const Map<String, int> teamLimit = {
+    'free': 1,
+    'basic': 1,
+    'premium': 3,
+    'vip': 5,
+  };
+
+  /// Plans with Telegram bot auto-notifications (only VIP)
+  static const List<String> telegramNotifyPlans = ['vip'];
+
+  /// Plans with LinkedIn access (Premium+)
+  static const List<String> linkedinPlans = ['premium', 'vip'];
+
+  /// Check if plan has LinkedIn access
+  static bool hasLinkedin(String plan) => linkedinPlans.contains(plan);
+
+  /// Free trial duration (days)
+  static const int freeTrialDays = 20;
+
+  /// Get daily limit for a plan
+  static int limitFor(String plan) => dailyLimits[plan] ?? 0;
+
+  /// Is unlimited contacts
+  static bool isUnlimited(String plan) => plan == 'vip';
 }

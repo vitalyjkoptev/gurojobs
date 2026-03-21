@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/theme.dart';
 import '../../../core/localization.dart';
 import '../../../providers/lang_provider.dart';
+import 'payment_flow_screen.dart';
 
 class BillingScreen extends StatefulWidget {
   const BillingScreen({super.key});
@@ -85,46 +86,41 @@ class _BillingScreenState extends State<BillingScreen> {
 
             _planCard(
               index: 0,
-              name: AppStrings.t('plan_starter'),
-              price: '\$4.99',
+              name: 'Basic',
+              price: '\$10',
               period: AppStrings.t('per_month'),
+              badge: '20 days free',
               features: [
-                AppStrings.t('feat_unlimited_apps'),
-                AppStrings.t('feat_profile_boost'),
-                AppStrings.t('feat_2_messengers'),
-                AppStrings.t('feat_email_alerts'),
+                AppStrings.t('plan_basic_contacts'),
+                AppStrings.t('plan_basic_desc'),
               ],
               color: GuroJobsTheme.info,
             ),
             _planCard(
               index: 1,
-              name: AppStrings.t('plan_pro'),
-              price: '\$12.99',
+              name: 'Premium',
+              price: '\$35',
               period: AppStrings.t('per_month'),
               badge: AppStrings.t('popular'),
               features: [
-                AppStrings.t('feat_everything_starter'),
-                AppStrings.t('feat_priority_search'),
-                AppStrings.t('feat_all_messengers'),
-                AppStrings.t('feat_direct_chat'),
-                AppStrings.t('feat_agency_ratings'),
-                AppStrings.t('feat_cv_analytics'),
+                AppStrings.t('plan_premium_contacts'),
+                AppStrings.t('plan_premium_team'),
+                AppStrings.t('plan_premium_linkedin'),
+                AppStrings.t('plan_premium_desc'),
               ],
               color: GuroJobsTheme.primary,
             ),
             _planCard(
               index: 2,
-              name: AppStrings.t('plan_elite'),
-              price: '\$29.99',
+              name: 'VIP',
+              price: '\$65',
               period: AppStrings.t('per_month'),
               features: [
-                AppStrings.t('feat_everything_pro'),
-                AppStrings.t('feat_account_manager'),
-                AppStrings.t('feat_verified_badge'),
-                AppStrings.t('feat_priority_intro'),
-                AppStrings.t('feat_events'),
-                AppStrings.t('feat_crypto_board'),
-                AppStrings.t('feat_ai_matching'),
+                AppStrings.t('plan_vip_contacts'),
+                AppStrings.t('plan_vip_team'),
+                AppStrings.t('plan_premium_linkedin'),
+                AppStrings.t('plan_vip_bot'),
+                AppStrings.t('plan_vip_desc'),
               ],
               color: GuroJobsTheme.accent,
             ),
@@ -134,7 +130,9 @@ class _BillingScreenState extends State<BillingScreen> {
             Text(AppStrings.t('payment_method'), style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: context.textPrimaryC)),
             const SizedBox(height: 16),
 
-            _payMethodTile('card', AppStrings.t('pay_card'), Icons.credit_card, AppStrings.t('pay_card_desc'), GuroJobsTheme.primary),
+            _payMethodTile('stripe', 'Stripe', Icons.credit_card, AppStrings.t('pay_stripe_desc'), const Color(0xFF635BFF)),
+            _payMethodTile('paypal', 'PayPal', Icons.paypal_outlined, AppStrings.t('pay_paypal_desc'), const Color(0xFF003087)),
+            _payMethodTile('revolut', 'Revolut', Icons.account_balance, AppStrings.t('pay_revolut_desc'), const Color(0xFF0075EB)),
             _payMethodTile('crypto', AppStrings.t('pay_crypto'), Icons.currency_bitcoin, AppStrings.t('pay_crypto_desc'), const Color(0xFFF7931A)),
 
             const SizedBox(height: 20),
@@ -373,29 +371,17 @@ class _BillingScreenState extends State<BillingScreen> {
   }
 
   void _subscribe() {
-    final plans = [AppStrings.t('plan_starter'), AppStrings.t('plan_pro'), AppStrings.t('plan_elite')];
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(AppStrings.t('confirm_subscription')),
-        content: Text('${AppStrings.t('subscribe_to')} ${plans[_selectedPlan]} ${AppStrings.t('plan_via')} ${_selectedPayMethod?.toUpperCase()}?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(AppStrings.t('cancel'))),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('${AppStrings.t('subscribed_to')} ${plans[_selectedPlan]}! ${AppStrings.t('payment_processing')}'),
-                  backgroundColor: GuroJobsTheme.success,
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            },
-            child: Text(AppStrings.t('subscribe'), style: const TextStyle(fontWeight: FontWeight.w700)),
-          ),
-        ],
-      ),
-    );
+    const planKeys = ['basic', 'premium', 'vip'];
+    const planNames = ['Basic', 'Premium', 'VIP'];
+    const planPrices = ['\$10', '\$35', '\$65'];
+    const planColors = [GuroJobsTheme.info, GuroJobsTheme.primary, GuroJobsTheme.accent];
+
+    Navigator.push(context, MaterialPageRoute(builder: (_) => PaymentFlowScreen(
+      planKey: planKeys[_selectedPlan],
+      planName: planNames[_selectedPlan],
+      planPrice: planPrices[_selectedPlan],
+      payMethod: _selectedPayMethod!,
+      planColor: planColors[_selectedPlan],
+    )));
   }
 }

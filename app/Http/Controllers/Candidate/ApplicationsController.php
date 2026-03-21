@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Candidate;
 use App\Http\Controllers\Controller;
 use App\Models\Job;
 use App\Models\JobApplication;
+use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -88,6 +89,9 @@ class ApplicationsController extends Controller
 
         // Обновляем счётчик
         $job->incrementApplications();
+
+        // Автоуведомление рекрутеру (in-app + Telegram для VIP)
+        NotificationService::notifyNewApplication($application);
 
         return response()->json([
             'success' => true,

@@ -44,7 +44,7 @@ class ApiService {
       Uri.parse(url),
       headers: _headers(token: token, isForm: true),
       body: fields,
-    );
+    ).timeout(const Duration(seconds: 8));
   }
 
   /// PUT with form-encoded body
@@ -138,7 +138,12 @@ class ApiService {
       'email': email,
       'password': password,
     });
-    return jsonDecode(response.body);
+    try {
+      return jsonDecode(response.body);
+    } catch (_) {
+      // Server returned non-JSON (HTML error page, 502, etc.)
+      throw Exception('Non-JSON response: ${response.statusCode}');
+    }
   }
 
   static Future<void> logout() async {

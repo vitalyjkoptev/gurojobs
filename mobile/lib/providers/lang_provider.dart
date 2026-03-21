@@ -13,18 +13,20 @@ class LangProvider extends ChangeNotifier {
     if (saved != null && _supportedLangs.contains(saved)) {
       AppStrings.setLang(saved);
     } else {
-      // Default to English — user can change in profile
-      AppStrings.setLang('en');
-      prefs.setString('app_lang', 'en');
+      // First launch — detect from device language
+      final systemLang = _detectSystemLang();
+      AppStrings.setLang(systemLang);
+      prefs.setString('app_lang', systemLang);
     }
   }
 
   String get currentLang => AppStrings.currentLang;
 
   Future<void> setLang(String lang) async {
+    if (lang == AppStrings.currentLang) return;
     AppStrings.setLang(lang);
-    await prefs.setString('app_lang', lang);
     notifyListeners();
+    await prefs.setString('app_lang', lang);
   }
 
   String _detectSystemLang() {

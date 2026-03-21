@@ -110,6 +110,29 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  /// Demo accounts — always work offline, in browser, without server
+  static const _demoAccounts = {
+    'admin@gurojobs.com': {'password': 'Admin2026GJ', 'name': 'Admin', 'role': 'admin'},
+    'employer@gurojobs.com': {'password': 'Employer2026GJ', 'name': 'Demo Employer', 'role': 'employer'},
+    'candidate@gurojobs.com': {'password': 'Candidate2026GJ', 'name': 'Demo Candidate', 'role': 'candidate'},
+  };
+
+  Future<bool> _demoLogin(String email, String password) async {
+    final demo = _demoAccounts[email.toLowerCase().trim()];
+    if (demo != null && demo['password'] == password) {
+      await ApiService.saveToken('demo_token_${demo['role']}');
+      _userName = demo['name'];
+      _userEmail = email;
+      _userRole = demo['role'];
+      await prefs.setString('user_name', _userName!);
+      await prefs.setString('user_email', email);
+      await prefs.setString('user_role', _userRole!);
+      _isLoggedIn = true;
+      return true;
+    }
+    return false;
+  }
+
   Future<bool> login({
     required String email,
     required String password,
@@ -118,12 +141,9 @@ class AuthProvider extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
 
+    // 1. Try real API
     try {
-      final response = await ApiService.login(
-        email: email,
-        password: password,
-      );
-
+      final response = await ApiService.login(email: email, password: password);
       if (response['token'] != null) {
         await ApiService.saveToken(response['token']);
         final user = response['user'];
@@ -137,18 +157,22 @@ class AuthProvider extends ChangeNotifier {
         _isLoading = false;
         notifyListeners();
         return true;
-      } else {
-        _errorMessage = response['message'] ?? 'Invalid credentials';
-        _isLoading = false;
-        notifyListeners();
-        return false;
       }
-    } catch (e) {
-      _errorMessage = 'Connection error. Please try again.';
+    } catch (_) {
+      // Server unreachable — fall through to demo
+    }
+
+    // 2. Fallback: demo accounts (offline / no server)
+    if (await _demoLogin(email, password)) {
       _isLoading = false;
       notifyListeners();
-      return false;
+      return true;
     }
+
+    _errorMessage = 'Invalid email or password';
+    _isLoading = false;
+    notifyListeners();
+    return false;
   }
 
   Future<bool> forgotPassword({required String email}) async {

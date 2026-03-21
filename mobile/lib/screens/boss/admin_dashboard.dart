@@ -530,7 +530,21 @@ class _AdminUsersTabState extends State<_AdminUsersTab> {
                     if (user['status'] == 'pending') ...[
                       Expanded(
                         child: ElevatedButton.icon(
-                          onPressed: () => Navigator.pop(ctx),
+                          onPressed: () {
+                            Navigator.pop(ctx);
+                            showDialog(context: context, builder: (d) => AlertDialog(
+                              title: Text('${AppStrings.t("adm_approve")} ${user["name"]}?'),
+                              content: Text(AppStrings.t('adm_approve_confirm')),
+                              actions: [
+                                TextButton(onPressed: () => Navigator.pop(d), child: Text(AppStrings.t('cancel'))),
+                                ElevatedButton(onPressed: () {
+                                  Navigator.pop(d);
+                                  setState(() => user['status'] = 'active');
+                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${user["name"]} ${AppStrings.t("adm_approved")}'), backgroundColor: GuroJobsTheme.success, behavior: SnackBarBehavior.floating));
+                                }, style: ElevatedButton.styleFrom(backgroundColor: GuroJobsTheme.success), child: Text(AppStrings.t('adm_approve'))),
+                              ],
+                            ));
+                          },
                           icon: const Icon(Icons.check, size: 18),
                           label: Text(AppStrings.t('adm_approve')),
                           style: ElevatedButton.styleFrom(backgroundColor: GuroJobsTheme.success, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
@@ -539,7 +553,26 @@ class _AdminUsersTabState extends State<_AdminUsersTab> {
                       const SizedBox(width: 10),
                       Expanded(
                         child: OutlinedButton.icon(
-                          onPressed: () => Navigator.pop(ctx),
+                          onPressed: () {
+                            Navigator.pop(ctx);
+                            final reasonCtrl = TextEditingController();
+                            showDialog(context: context, builder: (d) => AlertDialog(
+                              title: Text('${AppStrings.t("adm_reject")} ${user["name"]}?'),
+                              content: Column(mainAxisSize: MainAxisSize.min, children: [
+                                Text(AppStrings.t('adm_reject_reason')),
+                                const SizedBox(height: 12),
+                                TextField(controller: reasonCtrl, maxLines: 3, decoration: InputDecoration(hintText: AppStrings.t('adm_reason_hint'), border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)))),
+                              ]),
+                              actions: [
+                                TextButton(onPressed: () => Navigator.pop(d), child: Text(AppStrings.t('cancel'))),
+                                ElevatedButton(onPressed: () {
+                                  Navigator.pop(d);
+                                  setState(() => user['status'] = 'rejected');
+                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${user["name"]} ${AppStrings.t("adm_rejected_status")}'), backgroundColor: GuroJobsTheme.error, behavior: SnackBarBehavior.floating));
+                                }, style: ElevatedButton.styleFrom(backgroundColor: GuroJobsTheme.error), child: Text(AppStrings.t('adm_reject'))),
+                              ],
+                            ));
+                          },
                           icon: const Icon(Icons.close, size: 18),
                           label: Text(AppStrings.t('adm_reject')),
                           style: OutlinedButton.styleFrom(foregroundColor: GuroJobsTheme.error, side: const BorderSide(color: GuroJobsTheme.error), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
@@ -548,7 +581,10 @@ class _AdminUsersTabState extends State<_AdminUsersTab> {
                     ] else if (user['status'] == 'active') ...[
                       Expanded(
                         child: ElevatedButton.icon(
-                          onPressed: () => Navigator.pop(ctx),
+                          onPressed: () {
+                            Navigator.pop(ctx);
+                            Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatScreen()));
+                          },
                           icon: const Icon(Icons.chat, size: 18),
                           label: Text(AppStrings.t('adm_message')),
                           style: ElevatedButton.styleFrom(backgroundColor: GuroJobsTheme.primary, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
@@ -557,7 +593,26 @@ class _AdminUsersTabState extends State<_AdminUsersTab> {
                       const SizedBox(width: 10),
                       Expanded(
                         child: OutlinedButton.icon(
-                          onPressed: () => Navigator.pop(ctx),
+                          onPressed: () {
+                            Navigator.pop(ctx);
+                            final reasonCtrl = TextEditingController();
+                            showDialog(context: context, builder: (d) => AlertDialog(
+                              title: Text('${AppStrings.t("adm_ban")} ${user["name"]}?'),
+                              content: Column(mainAxisSize: MainAxisSize.min, children: [
+                                Text(AppStrings.t('adm_ban_confirm')),
+                                const SizedBox(height: 12),
+                                TextField(controller: reasonCtrl, maxLines: 2, decoration: InputDecoration(hintText: AppStrings.t('adm_reason_hint'), border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)))),
+                              ]),
+                              actions: [
+                                TextButton(onPressed: () => Navigator.pop(d), child: Text(AppStrings.t('cancel'))),
+                                ElevatedButton(onPressed: () {
+                                  Navigator.pop(d);
+                                  setState(() => user['status'] = 'banned');
+                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${user["name"]} ${AppStrings.t("blocked")}'), backgroundColor: GuroJobsTheme.error, behavior: SnackBarBehavior.floating));
+                                }, style: ElevatedButton.styleFrom(backgroundColor: GuroJobsTheme.error), child: Text(AppStrings.t('adm_ban'))),
+                              ],
+                            ));
+                          },
                           icon: const Icon(Icons.block, size: 18),
                           label: Text(AppStrings.t('adm_ban')),
                           style: OutlinedButton.styleFrom(foregroundColor: GuroJobsTheme.error, side: const BorderSide(color: GuroJobsTheme.error), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
@@ -566,7 +621,21 @@ class _AdminUsersTabState extends State<_AdminUsersTab> {
                     ] else if (user['status'] == 'banned') ...[
                       Expanded(
                         child: ElevatedButton.icon(
-                          onPressed: () => Navigator.pop(ctx),
+                          onPressed: () {
+                            Navigator.pop(ctx);
+                            showDialog(context: context, builder: (d) => AlertDialog(
+                              title: Text('${AppStrings.t("adm_unban")} ${user["name"]}?'),
+                              content: Text(AppStrings.t('adm_unban_confirm')),
+                              actions: [
+                                TextButton(onPressed: () => Navigator.pop(d), child: Text(AppStrings.t('cancel'))),
+                                ElevatedButton(onPressed: () {
+                                  Navigator.pop(d);
+                                  setState(() => user['status'] = 'active');
+                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${user["name"]} ${AppStrings.t("adm_unbanned")}'), backgroundColor: GuroJobsTheme.success, behavior: SnackBarBehavior.floating));
+                                }, style: ElevatedButton.styleFrom(backgroundColor: GuroJobsTheme.success), child: Text(AppStrings.t('adm_unban'))),
+                              ],
+                            ));
+                          },
                           icon: const Icon(Icons.restore, size: 18),
                           label: Text(AppStrings.t('adm_unban')),
                           style: ElevatedButton.styleFrom(backgroundColor: GuroJobsTheme.success, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
@@ -655,9 +724,53 @@ class _AdminJobsTabState extends State<_AdminJobsTab> {
                     itemCount: filtered.length,
                     itemBuilder: (context, index) => _AdminJobCard(
                       job: filtered[index],
-                      onApprove: () => setState(() => filtered[index]['modStatus'] = 'approved'),
-                      onReject: () => setState(() => filtered[index]['modStatus'] = 'rejected'),
-                      onFeature: () => setState(() => filtered[index]['modStatus'] = 'featured'),
+                      onApprove: () {
+                        showDialog(context: context, builder: (d) => AlertDialog(
+                          title: Text('${AppStrings.t("adm_approve")}: ${filtered[index]["title"]}?'),
+                          content: Text(AppStrings.t('adm_approve_job_confirm')),
+                          actions: [
+                            TextButton(onPressed: () => Navigator.pop(d), child: Text(AppStrings.t('cancel'))),
+                            ElevatedButton(onPressed: () {
+                              Navigator.pop(d);
+                              setState(() => filtered[index]['modStatus'] = 'approved');
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${filtered[index]["title"]} ${AppStrings.t("adm_approved")}'), backgroundColor: GuroJobsTheme.success, behavior: SnackBarBehavior.floating));
+                            }, style: ElevatedButton.styleFrom(backgroundColor: GuroJobsTheme.success), child: Text(AppStrings.t('adm_approve'))),
+                          ],
+                        ));
+                      },
+                      onReject: () {
+                        final reasonCtrl = TextEditingController();
+                        showDialog(context: context, builder: (d) => AlertDialog(
+                          title: Text('${AppStrings.t("adm_reject")}: ${filtered[index]["title"]}?'),
+                          content: Column(mainAxisSize: MainAxisSize.min, children: [
+                            Text(AppStrings.t('adm_reject_job_reason')),
+                            const SizedBox(height: 12),
+                            TextField(controller: reasonCtrl, maxLines: 3, decoration: InputDecoration(hintText: AppStrings.t('adm_reason_hint'), border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)))),
+                          ]),
+                          actions: [
+                            TextButton(onPressed: () => Navigator.pop(d), child: Text(AppStrings.t('cancel'))),
+                            ElevatedButton(onPressed: () {
+                              Navigator.pop(d);
+                              setState(() => filtered[index]['modStatus'] = 'rejected');
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${filtered[index]["title"]} ${AppStrings.t("adm_rejected_status")}'), backgroundColor: GuroJobsTheme.error, behavior: SnackBarBehavior.floating));
+                            }, style: ElevatedButton.styleFrom(backgroundColor: GuroJobsTheme.error), child: Text(AppStrings.t('adm_reject'))),
+                          ],
+                        ));
+                      },
+                      onFeature: () {
+                        showDialog(context: context, builder: (d) => AlertDialog(
+                          title: Text('${AppStrings.t("adm_featured")}: ${filtered[index]["title"]}?'),
+                          content: Text(AppStrings.t('adm_feature_confirm')),
+                          actions: [
+                            TextButton(onPressed: () => Navigator.pop(d), child: Text(AppStrings.t('cancel'))),
+                            ElevatedButton(onPressed: () {
+                              Navigator.pop(d);
+                              setState(() => filtered[index]['modStatus'] = 'featured');
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${filtered[index]["title"]} → Featured'), backgroundColor: GuroJobsTheme.accent, behavior: SnackBarBehavior.floating));
+                            }, style: ElevatedButton.styleFrom(backgroundColor: GuroJobsTheme.accent), child: const Text('Feature')),
+                          ],
+                        ));
+                      },
                     ),
                   ),
           ),
@@ -761,6 +874,7 @@ class _AdminProfileTab extends StatelessWidget {
               padding: const EdgeInsets.only(left: 16, top: 8, bottom: 4),
               child: Text(AppStrings.t('adm_tools'), style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.textHintC, letterSpacing: 0.5)),
             ),
+            _AdminMenuItem(icon: Icons.card_membership, label: AppStrings.t('adm_subscriptions'), onTap: () => _showSubscriptions(context)),
             _AdminMenuItem(icon: Icons.payment, label: AppStrings.t('adm_payments'), onTap: () => _showPayments(context)),
             _AdminMenuItem(icon: Icons.analytics_outlined, label: AppStrings.t('adm_analytics'), onTap: () => _showAnalytics(context)),
             _AdminMenuItem(icon: Icons.security, label: AppStrings.t('adm_security'), onTap: () => _showSecurity(context)),
@@ -898,10 +1012,6 @@ class _AdminProfileTab extends StatelessWidget {
   }
 
   static void _showPricingSettings(BuildContext context) {
-    final tgCtrl = TextEditingController(text: ContactPricing.telegramPrice.toStringAsFixed(0));
-    final liCtrl = TextEditingController(text: ContactPricing.linkedinPrice.toStringAsFixed(0));
-    final chatCtrl = TextEditingController(text: ContactPricing.chatPrice.toStringAsFixed(0));
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -914,38 +1024,45 @@ class _AdminProfileTab extends StatelessWidget {
             Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: context.dividerC, borderRadius: BorderRadius.circular(2)))),
             const SizedBox(height: 16),
             Row(children: [
-              const Icon(Icons.monetization_on, color: GuroJobsTheme.primary, size: 24),
+              const Icon(Icons.confirmation_number, color: GuroJobsTheme.primary, size: 24),
               const SizedBox(width: 10),
-              Text('Contact Unlock Pricing', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: context.textPrimaryC)),
+              Expanded(child: Text('Daily Contact Limits', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: context.textPrimaryC))),
             ]),
             const SizedBox(height: 6),
-            Text('Set prices for employers to unlock candidate contacts', style: TextStyle(fontSize: 13, color: context.textSecondaryC)),
+            Text('Contact reveal limits per plan (per day)', style: TextStyle(fontSize: 13, color: context.textSecondaryC)),
             const SizedBox(height: 24),
 
-            _PricingField(label: 'Telegram Contact', icon: Icons.send, controller: tgCtrl),
-            const SizedBox(height: 14),
-            _PricingField(label: 'LinkedIn Profile', icon: Icons.business_center, controller: liCtrl),
-            const SizedBox(height: 14),
-            _PricingField(label: 'Direct Message (Chat)', icon: Icons.chat_bubble_outline, controller: chatCtrl),
-            const SizedBox(height: 24),
+            ...ContactPricing.dailyLimits.entries.map((entry) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: context.surfaceBg,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: context.dividerC),
+                ),
+                child: Row(children: [
+                  Icon(Icons.workspace_premium, size: 20, color: GuroJobsTheme.primary),
+                  const SizedBox(width: 12),
+                  Expanded(child: Text(ContactPricing.planNames[entry.key] ?? entry.key, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: context.textPrimaryC))),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    decoration: BoxDecoration(color: GuroJobsTheme.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+                    child: Text('${entry.value} / day', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: GuroJobsTheme.primary)),
+                  ),
+                ]),
+              ),
+            )),
+            const SizedBox(height: 16),
 
             SizedBox(
               width: double.infinity, height: 50,
               child: ElevatedButton.icon(
                 onPressed: () {
-                  ContactPricing.telegramPrice = double.tryParse(tgCtrl.text) ?? 5.0;
-                  ContactPricing.linkedinPrice = double.tryParse(liCtrl.text) ?? 5.0;
-                  ContactPricing.chatPrice = double.tryParse(chatCtrl.text) ?? 5.0;
                   Navigator.pop(ctx);
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: const Text('Pricing updated!'),
-                    backgroundColor: GuroJobsTheme.success,
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  ));
                 },
-                icon: const Icon(Icons.save, size: 20),
-                label: const Text('Save Pricing', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                icon: const Icon(Icons.check, size: 20),
+                label: const Text('Close', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                 style: ElevatedButton.styleFrom(backgroundColor: GuroJobsTheme.primary, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
               ),
             ),
@@ -953,6 +1070,10 @@ class _AdminProfileTab extends StatelessWidget {
         );
       },
     );
+  }
+
+  static void _showSubscriptions(BuildContext context) {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => const _AdminSubscriptionsScreen()));
   }
 
   static void _showPayments(BuildContext context) {
@@ -1014,20 +1135,20 @@ class _AdminProfileTab extends StatelessWidget {
                 // Subscription plans
                 Text('Subscription Plans', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: context.textPrimaryC)),
                 const SizedBox(height: 12),
-                _PlanRow(name: 'Pro Plan', price: '\$49/mo', subscribers: '34', color: GuroJobsTheme.primary),
-                _PlanRow(name: 'Business Plan', price: '\$99/mo', subscribers: '18', color: GuroJobsTheme.accent),
-                _PlanRow(name: 'Enterprise', price: '\$249/mo', subscribers: '7', color: const Color(0xFF6C5CE7)),
-                _PlanRow(name: 'Free Trial', price: 'Free', subscribers: '156', color: GuroJobsTheme.success),
+                _PlanRow(name: 'Basic', price: '\$10/mo', subscribers: '87', color: GuroJobsTheme.info),
+                _PlanRow(name: 'Premium', price: '\$35/mo', subscribers: '34', color: GuroJobsTheme.primary),
+                _PlanRow(name: 'VIP', price: '\$65/mo', subscribers: '12', color: GuroJobsTheme.accent),
+                _PlanRow(name: 'Free / Trial', price: 'Free', subscribers: '156', color: GuroJobsTheme.success),
                 const SizedBox(height: 20),
                 // Recent transactions
                 Text('Recent Transactions', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: context.textPrimaryC)),
                 const SizedBox(height: 12),
-                _TransactionRow(company: 'BetStars Gaming', amount: '\$99.00', date: 'Mar 17', status: 'Paid', color: GuroJobsTheme.success),
-                _TransactionRow(company: 'CryptoPlay Ltd', amount: '\$249.00', date: 'Mar 16', status: 'Paid', color: GuroJobsTheme.success),
-                _TransactionRow(company: 'LuckySlots', amount: '\$49.00', date: 'Mar 15', status: 'Pending', color: GuroJobsTheme.warning),
-                _TransactionRow(company: 'NutraHealth', amount: '\$99.00', date: 'Mar 14', status: 'Paid', color: GuroJobsTheme.success),
-                _TransactionRow(company: 'BlockBet', amount: '\$49.00', date: 'Mar 13', status: 'Overdue', color: GuroJobsTheme.error),
-                _TransactionRow(company: 'DatingPro', amount: '\$249.00', date: 'Mar 12', status: 'Paid', color: GuroJobsTheme.success),
+                _TransactionRow(company: 'BetStars Gaming', amount: '\$65.00', date: 'Mar 17', status: 'Paid', plan: 'VIP', color: GuroJobsTheme.success),
+                _TransactionRow(company: 'CryptoPlay Ltd', amount: '\$35.00', date: 'Mar 16', status: 'Paid', plan: 'Premium', color: GuroJobsTheme.success),
+                _TransactionRow(company: 'LuckySlots', amount: '\$10.00', date: 'Mar 15', status: 'Pending', plan: 'Basic', color: GuroJobsTheme.warning),
+                _TransactionRow(company: 'NutraHealth', amount: '\$35.00', date: 'Mar 14', status: 'Paid', plan: 'Premium', color: GuroJobsTheme.success),
+                _TransactionRow(company: 'BlockBet', amount: '\$10.00', date: 'Mar 13', status: 'Overdue', plan: 'Basic', color: GuroJobsTheme.error),
+                _TransactionRow(company: 'DatingPro', amount: '\$65.00', date: 'Mar 12', status: 'Paid', plan: 'VIP', color: GuroJobsTheme.success),
                 const SizedBox(height: 20),
                 // Contact Unlock Pricing
                 Text('Contact Unlock Pricing', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: context.textPrimaryC)),
@@ -1041,9 +1162,13 @@ class _AdminProfileTab extends StatelessWidget {
                 Text('Payment Methods', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: context.textPrimaryC)),
                 const SizedBox(height: 12),
                 _PaymentMethodRow(method: 'Stripe', icon: Icons.credit_card, active: true),
-                _PaymentMethodRow(method: 'PayPal', icon: Icons.account_balance_wallet, active: true),
-                _PaymentMethodRow(method: 'Bank Transfer', icon: Icons.account_balance, active: false),
-                _PaymentMethodRow(method: 'Crypto (USDT)', icon: Icons.currency_bitcoin, active: false),
+                _PaymentMethodRow(method: 'PayPal', icon: Icons.paypal_outlined, active: true),
+                _PaymentMethodRow(method: 'Revolut', icon: Icons.account_balance, active: true),
+                _PaymentMethodRow(method: 'Crypto (USDT/USDC)', icon: Icons.currency_bitcoin, active: true),
+                _PaymentMethodRow(method: 'Trustly', icon: Icons.account_balance, active: true),
+                _PaymentMethodRow(method: 'Skrill', icon: Icons.wallet, active: false),
+                _PaymentMethodRow(method: 'Neteller', icon: Icons.account_balance_wallet, active: false),
+                _PaymentMethodRow(method: 'Paysafecard', icon: Icons.confirmation_number, active: false),
                 const SizedBox(height: 20),
               ],
             );
@@ -1077,20 +1202,28 @@ class _AdminProfileTab extends StatelessWidget {
                 _SecurityItem(icon: Icons.vpn_key, title: 'API Keys', subtitle: '3 active keys', color: GuroJobsTheme.warning, onTap: () => _showApiKeys(ctx)),
                 _SecurityItem(icon: Icons.history, title: 'Login History', subtitle: 'Last login: just now (Chrome, macOS)', color: GuroJobsTheme.accent, onTap: () => _showLoginHistory(ctx)),
                 _SecurityItem(icon: Icons.block, title: 'IP Whitelist', subtitle: '2 IPs whitelisted', color: GuroJobsTheme.error, onTap: () => _showIpWhitelist(ctx)),
+                const SizedBox(height: 20),
+                // Anti-Fraud section
+                Text('Anti-Fraud & Abuse Protection', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: context.textPrimaryC)),
+                const SizedBox(height: 12),
+                _SecurityItem(icon: Icons.fingerprint, title: 'Device Fingerprinting', subtitle: 'Detect multi-accounts by device ID', color: const Color(0xFF9C27B0), onTap: () => _showAntifraud(ctx, 'fingerprint')),
+                _SecurityItem(icon: Icons.location_searching, title: 'IP Tracking', subtitle: '14 flagged IPs with multi-accounts', color: GuroJobsTheme.error, onTap: () => _showAntifraud(ctx, 'ip')),
+                _SecurityItem(icon: Icons.timer_off, title: 'Trial Abuse Detection', subtitle: '3 suspected abusers', color: GuroJobsTheme.warning, onTap: () => _showAntifraud(ctx, 'trial')),
+                _SecurityItem(icon: Icons.email_outlined, title: 'Email Fraud Check', subtitle: 'Disposable email blocking: ON', color: GuroJobsTheme.info, onTap: () => _showAntifraud(ctx, 'email')),
                 const SizedBox(height: 16),
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: GuroJobsTheme.success.withOpacity(0.05),
+                    color: GuroJobsTheme.success.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: GuroJobsTheme.success.withOpacity(0.2)),
+                    border: Border.all(color: GuroJobsTheme.success.withValues(alpha: 0.2)),
                   ),
                   child: Row(
                     children: [
                       const Icon(Icons.verified, color: GuroJobsTheme.success, size: 20),
                       const SizedBox(width: 10),
                       Expanded(child: Text('Security score: Excellent', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.textPrimaryC))),
-                      Text('95/100', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: GuroJobsTheme.success)),
+                      const Text('95/100', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: GuroJobsTheme.success)),
                     ],
                   ),
                 ),
@@ -1490,6 +1623,11 @@ class _AdminProfileTab extends StatelessWidget {
     );
   }
 
+  // ── Anti-Fraud ──
+  static void _showAntifraud(BuildContext context, String type) {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => _AntifraudScreen(type: type)));
+  }
+
   // ── Helper: info dialog ──
   static void _showInfoDialog(BuildContext context, String title, String body, IconData icon, Color color) {
     showDialog(
@@ -1587,44 +1725,7 @@ class _AdminProfileTab extends StatelessWidget {
   }
 
   static void _showVerification(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      backgroundColor: context.cardBg,
-      builder: (ctx) {
-        return DraggableScrollableSheet(
-          initialChildSize: 0.55, minChildSize: 0.3, maxChildSize: 0.8, expand: false,
-          builder: (_, scrollCtrl) {
-            return ListView(
-              controller: scrollCtrl,
-              padding: const EdgeInsets.all(20),
-              children: [
-                Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: context.dividerC, borderRadius: BorderRadius.circular(2)))),
-                const SizedBox(height: 16),
-                Text(AppStrings.t('adm_verification'), style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: context.textPrimaryC)),
-                const SizedBox(height: 20),
-                _VerificationStat(label: 'Pending employer verifications', count: '4', color: GuroJobsTheme.warning),
-                _VerificationStat(label: 'Pending job reviews', count: '3', color: GuroJobsTheme.info),
-                _VerificationStat(label: 'Reported profiles', count: '2', color: GuroJobsTheme.error),
-                _VerificationStat(label: 'Verified employers', count: '67', color: GuroJobsTheme.success),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity, height: 44,
-                  child: ElevatedButton.icon(
-                    onPressed: () => Navigator.pop(ctx),
-                    icon: const Icon(Icons.checklist, size: 18),
-                    label: const Text('Review Queue'),
-                    style: ElevatedButton.styleFrom(backgroundColor: GuroJobsTheme.primary, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-                  ),
-                ),
-                const SizedBox(height: 20),
-              ],
-            );
-          },
-        );
-      },
-    );
+    Navigator.push(context, MaterialPageRoute(builder: (_) => const _AdminVerificationScreen()));
   }
 
   static void _showLanguagePicker(BuildContext context, LangProvider lang) {
@@ -2303,8 +2404,9 @@ class _PlanRow extends StatelessWidget {
 
 class _TransactionRow extends StatelessWidget {
   final String company, amount, date, status;
+  final String? plan;
   final Color color;
-  const _TransactionRow({required this.company, required this.amount, required this.date, required this.status, required this.color});
+  const _TransactionRow({required this.company, required this.amount, required this.date, required this.status, this.plan, required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -2318,14 +2420,24 @@ class _TransactionRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(company, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.textPrimaryC)),
-              Text(date, style: TextStyle(fontSize: 12, color: context.textSecondaryC)),
+              Row(children: [
+                Text(date, style: TextStyle(fontSize: 12, color: context.textSecondaryC)),
+                if (plan != null) ...[
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                    decoration: BoxDecoration(color: GuroJobsTheme.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4)),
+                    child: Text(plan!, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: GuroJobsTheme.primary)),
+                  ),
+                ],
+              ]),
             ],
           )),
           Text(amount, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: context.textPrimaryC)),
           const SizedBox(width: 10),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+            decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
             child: Text(status, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: color)),
           ),
         ],
@@ -2454,56 +2566,664 @@ class _PricingField extends StatelessWidget {
   }
 }
 
-class _ContactPricingWidget extends StatefulWidget {
+// ═══════════════════════════════════════════════════════════════
+// ADMIN SUBSCRIPTIONS SCREEN
+// ═══════════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════════
+// ANTI-FRAUD SCREEN
+// ═══════════════════════════════════════════════════════════════
+
+class _AntifraudScreen extends StatefulWidget {
+  final String type; // fingerprint, ip, trial, email
+  const _AntifraudScreen({required this.type});
   @override
-  State<_ContactPricingWidget> createState() => _ContactPricingWidgetState();
+  State<_AntifraudScreen> createState() => _AntifraudState();
 }
 
-class _ContactPricingWidgetState extends State<_ContactPricingWidget> {
-  late TextEditingController _tgCtrl;
-  late TextEditingController _liCtrl;
-  late TextEditingController _chatCtrl;
+class _AntifraudState extends State<_AntifraudScreen> {
+  bool _deviceFingerprintEnabled = true;
+  bool _ipTrackingEnabled = true;
+  bool _trialAbuseEnabled = true;
+  bool _disposableEmailBlock = true;
+  bool _sameCardBlock = true;
+  bool _phoneVerification = false;
+
+  final _suspectedTrialAbusers = <Map<String, dynamic>>[
+    {'email': 'john.doe@gmail.com', 'ips': '3 IPs match user john_d@temp.com', 'device': 'Same device ID', 'trials': 4, 'status': 'flagged'},
+    {'email': 'fake@guerrillamail.com', 'ips': '91.214.xx.xx (proxy)', 'device': 'New device each time', 'trials': 7, 'status': 'flagged'},
+    {'email': 'test123@yopmail.com', 'ips': '185.xx.xx.xx (VPN)', 'device': 'Emulator detected', 'trials': 3, 'status': 'blocked'},
+  ];
+
+  final _flaggedIPs = <Map<String, String>>[
+    {'ip': '91.214.15.42', 'accounts': '5', 'country': 'UA', 'status': 'flagged'},
+    {'ip': '185.62.190.11', 'accounts': '3', 'country': 'RU', 'status': 'flagged'},
+    {'ip': '45.33.120.78', 'accounts': '4', 'country': 'DE', 'status': 'blocked'},
+  ];
 
   @override
-  void initState() {
-    super.initState();
-    _tgCtrl = TextEditingController(text: ContactPricing.telegramPrice.toStringAsFixed(0));
-    _liCtrl = TextEditingController(text: ContactPricing.linkedinPrice.toStringAsFixed(0));
-    _chatCtrl = TextEditingController(text: ContactPricing.chatPrice.toStringAsFixed(0));
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Anti-Fraud Protection')),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          // Protection toggles
+          Text('Protection Rules', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: context.textPrimaryC)),
+          const SizedBox(height: 14),
+
+          _toggle('Device Fingerprinting', 'Block same device from creating multiple accounts', _deviceFingerprintEnabled, (v) => setState(() => _deviceFingerprintEnabled = v), Icons.fingerprint, const Color(0xFF9C27B0)),
+          _toggle('IP Tracking', 'Flag accounts sharing same IP address', _ipTrackingEnabled, (v) => setState(() => _ipTrackingEnabled = v), Icons.location_searching, GuroJobsTheme.error),
+          _toggle('Trial Abuse Detection', 'Detect users cycling free trials with new emails', _trialAbuseEnabled, (v) => setState(() => _trialAbuseEnabled = v), Icons.timer_off, GuroJobsTheme.warning),
+          _toggle('Block Disposable Emails', 'Reject guerrillamail, yopmail, temp-mail, etc.', _disposableEmailBlock, (v) => setState(() => _disposableEmailBlock = v), Icons.email_outlined, GuroJobsTheme.info),
+          _toggle('Same Card Detection', 'Flag if same payment card used on multiple accounts', _sameCardBlock, (v) => setState(() => _sameCardBlock = v), Icons.credit_card, GuroJobsTheme.primary),
+          _toggle('Phone Verification', 'Require phone SMS verify for free trial signup', _phoneVerification, (v) => setState(() => _phoneVerification = v), Icons.phone_android, GuroJobsTheme.accent),
+
+          const SizedBox(height: 24),
+
+          // Flagged IPs
+          Text('Flagged IPs (${_flaggedIPs.length})', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: context.textPrimaryC)),
+          const SizedBox(height: 12),
+          ..._flaggedIPs.map((ip) => Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(color: context.cardBg, borderRadius: BorderRadius.circular(12), border: Border.all(color: context.dividerC)),
+            child: Row(children: [
+              Icon(Icons.warning_amber, size: 20, color: ip['status'] == 'blocked' ? GuroJobsTheme.error : GuroJobsTheme.warning),
+              const SizedBox(width: 10),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(ip['ip']!, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.textPrimaryC, fontFamily: 'monospace')),
+                Text('${ip["accounts"]} accounts · ${ip["country"]}', style: TextStyle(fontSize: 12, color: context.textSecondaryC)),
+              ])),
+              TextButton(onPressed: () {
+                setState(() => ip['status'] = ip['status'] == 'blocked' ? 'flagged' : 'blocked');
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${ip["ip"]} ${ip["status"]}'), behavior: SnackBarBehavior.floating));
+              }, child: Text(ip['status'] == 'blocked' ? 'Unblock' : 'Block', style: TextStyle(color: ip['status'] == 'blocked' ? GuroJobsTheme.success : GuroJobsTheme.error, fontWeight: FontWeight.w600))),
+            ]),
+          )),
+
+          const SizedBox(height: 24),
+
+          // Trial abusers
+          Text('Suspected Trial Abusers (${_suspectedTrialAbusers.length})', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: context.textPrimaryC)),
+          const SizedBox(height: 12),
+          ..._suspectedTrialAbusers.map((u) => Container(
+            margin: const EdgeInsets.only(bottom: 10),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: context.cardBg,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: u['status'] == 'blocked' ? GuroJobsTheme.error.withValues(alpha: 0.3) : GuroJobsTheme.warning.withValues(alpha: 0.3)),
+            ),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Row(children: [
+                Icon(Icons.person_off, size: 18, color: u['status'] == 'blocked' ? GuroJobsTheme.error : GuroJobsTheme.warning),
+                const SizedBox(width: 8),
+                Expanded(child: Text(u['email'] as String, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.textPrimaryC))),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(color: (u['status'] == 'blocked' ? GuroJobsTheme.error : GuroJobsTheme.warning).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
+                  child: Text('${u["trials"]} trials', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: u['status'] == 'blocked' ? GuroJobsTheme.error : GuroJobsTheme.warning)),
+                ),
+              ]),
+              const SizedBox(height: 6),
+              Text('IP: ${u["ips"]}', style: TextStyle(fontSize: 12, color: context.textSecondaryC)),
+              Text('Device: ${u["device"]}', style: TextStyle(fontSize: 12, color: context.textSecondaryC)),
+              const SizedBox(height: 8),
+              Row(children: [
+                if (u['status'] != 'blocked')
+                  Expanded(child: ElevatedButton(onPressed: () {
+                    setState(() => u['status'] = 'blocked');
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${u["email"]} blocked'), backgroundColor: GuroJobsTheme.error, behavior: SnackBarBehavior.floating));
+                  }, style: ElevatedButton.styleFrom(backgroundColor: GuroJobsTheme.error, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))), child: const Text('Block')))
+                else
+                  Expanded(child: OutlinedButton(onPressed: () {
+                    setState(() => u['status'] = 'flagged');
+                  }, style: OutlinedButton.styleFrom(foregroundColor: GuroJobsTheme.success, side: const BorderSide(color: GuroJobsTheme.success), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))), child: const Text('Unblock'))),
+                const SizedBox(width: 8),
+                Expanded(child: OutlinedButton(onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Dismissed ${u["email"]}'), behavior: SnackBarBehavior.floating));
+                }, style: OutlinedButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))), child: const Text('Dismiss'))),
+              ]),
+            ]),
+          )),
+        ],
+      ),
+    );
+  }
+
+  Widget _toggle(String title, String sub, bool val, ValueChanged<bool> onChanged, IconData icon, Color color) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(color: context.cardBg, borderRadius: BorderRadius.circular(12), border: Border.all(color: context.dividerC)),
+      child: Row(children: [
+        Icon(icon, size: 22, color: color),
+        const SizedBox(width: 12),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.textPrimaryC)),
+          Text(sub, style: TextStyle(fontSize: 11, color: context.textSecondaryC)),
+        ])),
+        Switch(value: val, onChanged: onChanged, activeColor: color),
+      ]),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ADMIN VERIFICATION & REPORTS SCREEN
+// ═══════════════════════════════════════════════════════════════
+
+class _AdminVerificationScreen extends StatefulWidget {
+  const _AdminVerificationScreen();
+  @override
+  State<_AdminVerificationScreen> createState() => _AdminVerificationState();
+}
+
+class _AdminVerificationState extends State<_AdminVerificationScreen> with SingleTickerProviderStateMixin {
+  late TabController _tabCtrl;
+
+  final _verifications = <Map<String, dynamic>>[
+    {'name': 'CryptoPlay Ltd', 'type': 'employer', 'status': 'pending', 'date': 'Mar 18', 'docs': 'Company registration, Tax ID'},
+    {'name': 'BlockBet', 'type': 'employer', 'status': 'pending', 'date': 'Mar 17', 'docs': 'Company registration'},
+    {'name': 'GambleFi', 'type': 'employer', 'status': 'pending', 'date': 'Mar 16', 'docs': 'Company registration, License'},
+    {'name': 'SlotMaster', 'type': 'employer', 'status': 'approved', 'date': 'Mar 14', 'docs': 'All verified'},
+  ];
+
+  final _reports = <Map<String, dynamic>>[
+    {'reporter': 'Anna K.', 'target': 'FakeCompany', 'reason': 'Fake job listing', 'status': 'pending', 'date': 'Mar 19'},
+    {'reporter': 'Ivan P.', 'target': 'ScamCo', 'reason': 'Spam messages', 'status': 'pending', 'date': 'Mar 18'},
+    {'reporter': 'Elena V.', 'target': 'BlockBet', 'reason': 'Misleading salary', 'status': 'resolved', 'date': 'Mar 15'},
+  ];
+
+  @override
+  void initState() { super.initState(); _tabCtrl = TabController(length: 2, vsync: this); }
+  @override
+  void dispose() { _tabCtrl.dispose(); super.dispose(); }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(AppStrings.t('adm_verification')),
+        bottom: TabBar(controller: _tabCtrl, labelColor: GuroJobsTheme.primary, unselectedLabelColor: context.textHintC, indicatorColor: GuroJobsTheme.primary, tabs: [
+          Tab(text: AppStrings.t('adm_verification')),
+          Tab(text: AppStrings.t('adm_reports')),
+        ]),
+      ),
+      body: TabBarView(controller: _tabCtrl, children: [
+        _verificationTab(),
+        _reportsTab(),
+      ]),
+    );
+  }
+
+  Widget _verificationTab() {
+    return ListView(padding: const EdgeInsets.all(20), children: [
+      // Stats
+      Row(children: [
+        _stat(context, '${_verifications.where((v) => v["status"] == "pending").length}', AppStrings.t('pending'), GuroJobsTheme.warning),
+        const SizedBox(width: 10),
+        _stat(context, '${_verifications.where((v) => v["status"] == "approved").length}', AppStrings.t('adm_approved'), GuroJobsTheme.success),
+      ]),
+      const SizedBox(height: 20),
+      ..._verifications.map((v) => _verificationCard(v)),
+    ]);
+  }
+
+  Widget _reportsTab() {
+    return ListView(padding: const EdgeInsets.all(20), children: [
+      Row(children: [
+        _stat(context, '${_reports.where((r) => r["status"] == "pending").length}', AppStrings.t('pending'), GuroJobsTheme.error),
+        const SizedBox(width: 10),
+        _stat(context, '${_reports.where((r) => r["status"] == "resolved").length}', AppStrings.t('resolved'), GuroJobsTheme.success),
+      ]),
+      const SizedBox(height: 20),
+      ..._reports.map((r) => _reportCard(r)),
+    ]);
+  }
+
+  Widget _stat(BuildContext context, String value, String label, Color color) {
+    return Expanded(child: Container(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+      child: Column(children: [
+        Text(value, style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: color)),
+        Text(label, style: TextStyle(fontSize: 12, color: context.textSecondaryC)),
+      ]),
+    ));
+  }
+
+  Widget _verificationCard(Map<String, dynamic> v) {
+    final isPending = v['status'] == 'pending';
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(color: context.cardBg, borderRadius: BorderRadius.circular(12), border: Border.all(color: context.dividerC)),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Icon(Icons.business, size: 20, color: isPending ? GuroJobsTheme.warning : GuroJobsTheme.success),
+          const SizedBox(width: 10),
+          Expanded(child: Text(v['name'] as String, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: context.textPrimaryC))),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(color: (isPending ? GuroJobsTheme.warning : GuroJobsTheme.success).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
+            child: Text(v['status'] as String, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: isPending ? GuroJobsTheme.warning : GuroJobsTheme.success)),
+          ),
+        ]),
+        const SizedBox(height: 8),
+        Text('${AppStrings.t("documents")}: ${v["docs"]}', style: TextStyle(fontSize: 12, color: context.textSecondaryC)),
+        Text(v['date'] as String, style: TextStyle(fontSize: 11, color: context.textHintC)),
+        if (isPending) ...[
+          const SizedBox(height: 10),
+          Row(children: [
+            Expanded(child: ElevatedButton(onPressed: () {
+              showDialog(context: context, builder: (d) => AlertDialog(
+                title: Text('${AppStrings.t("adm_approve")} ${v["name"]}?'),
+                content: Text(AppStrings.t('adm_verify_approve')),
+                actions: [
+                  TextButton(onPressed: () => Navigator.pop(d), child: Text(AppStrings.t('cancel'))),
+                  ElevatedButton(onPressed: () { Navigator.pop(d); setState(() => v['status'] = 'approved'); }, style: ElevatedButton.styleFrom(backgroundColor: GuroJobsTheme.success), child: Text(AppStrings.t('adm_approve'))),
+                ],
+              ));
+            }, style: ElevatedButton.styleFrom(backgroundColor: GuroJobsTheme.success, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))), child: Text(AppStrings.t('adm_approve')))),
+            const SizedBox(width: 8),
+            Expanded(child: OutlinedButton(onPressed: () {
+              final rc = TextEditingController();
+              showDialog(context: context, builder: (d) => AlertDialog(
+                title: Text('${AppStrings.t("adm_reject")} ${v["name"]}?'),
+                content: TextField(controller: rc, maxLines: 2, decoration: InputDecoration(hintText: AppStrings.t('adm_reason_hint'), border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)))),
+                actions: [
+                  TextButton(onPressed: () => Navigator.pop(d), child: Text(AppStrings.t('cancel'))),
+                  ElevatedButton(onPressed: () { Navigator.pop(d); setState(() => v['status'] = 'rejected'); }, style: ElevatedButton.styleFrom(backgroundColor: GuroJobsTheme.error), child: Text(AppStrings.t('adm_reject'))),
+                ],
+              ));
+            }, style: OutlinedButton.styleFrom(foregroundColor: GuroJobsTheme.error, side: const BorderSide(color: GuroJobsTheme.error), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))), child: Text(AppStrings.t('adm_reject')))),
+          ]),
+        ],
+      ]),
+    );
+  }
+
+  Widget _reportCard(Map<String, dynamic> r) {
+    final isPending = r['status'] == 'pending';
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(color: context.cardBg, borderRadius: BorderRadius.circular(12), border: Border.all(color: isPending ? GuroJobsTheme.error.withValues(alpha: 0.3) : context.dividerC)),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Icon(Icons.flag, size: 18, color: isPending ? GuroJobsTheme.error : GuroJobsTheme.success),
+          const SizedBox(width: 8),
+          Expanded(child: Text('${r["target"]}', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: context.textPrimaryC))),
+          Text(r['date'] as String, style: TextStyle(fontSize: 11, color: context.textHintC)),
+        ]),
+        const SizedBox(height: 6),
+        Text('${AppStrings.t("reason")}: ${r["reason"]}', style: TextStyle(fontSize: 13, color: context.textSecondaryC)),
+        Text('${AppStrings.t("reported_by")}: ${r["reporter"]}', style: TextStyle(fontSize: 12, color: context.textHintC)),
+        if (isPending) ...[
+          const SizedBox(height: 10),
+          Row(children: [
+            Expanded(child: ElevatedButton(onPressed: () {
+              showDialog(context: context, builder: (d) => AlertDialog(
+                title: Text(AppStrings.t('adm_take_action')),
+                content: Column(mainAxisSize: MainAxisSize.min, children: [
+                  ListTile(leading: const Icon(Icons.warning, color: GuroJobsTheme.warning), title: Text(AppStrings.t('adm_warn_user')), onTap: () { Navigator.pop(d); setState(() => r['status'] = 'resolved'); ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppStrings.t('adm_warning_sent')), backgroundColor: GuroJobsTheme.warning, behavior: SnackBarBehavior.floating)); }),
+                  ListTile(leading: const Icon(Icons.block, color: GuroJobsTheme.error), title: Text(AppStrings.t('adm_ban')), onTap: () { Navigator.pop(d); setState(() => r['status'] = 'resolved'); ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${r["target"]} ${AppStrings.t("blocked")}'), backgroundColor: GuroJobsTheme.error, behavior: SnackBarBehavior.floating)); }),
+                  ListTile(leading: const Icon(Icons.delete, color: GuroJobsTheme.error), title: Text(AppStrings.t('adm_remove_content')), onTap: () { Navigator.pop(d); setState(() => r['status'] = 'resolved'); ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppStrings.t('adm_content_removed')), backgroundColor: GuroJobsTheme.success, behavior: SnackBarBehavior.floating)); }),
+                ]),
+              ));
+            }, style: ElevatedButton.styleFrom(backgroundColor: GuroJobsTheme.error, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))), child: Text(AppStrings.t('adm_take_action')))),
+            const SizedBox(width: 8),
+            Expanded(child: OutlinedButton(onPressed: () {
+              setState(() => r['status'] = 'resolved');
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppStrings.t('adm_report_dismissed')), backgroundColor: GuroJobsTheme.info, behavior: SnackBarBehavior.floating));
+            }, style: OutlinedButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))), child: Text(AppStrings.t('adm_dismiss')))),
+          ]),
+        ],
+      ]),
+    );
+  }
+}
+
+class _AdminSubscriptionsScreen extends StatefulWidget {
+  const _AdminSubscriptionsScreen();
+  @override
+  State<_AdminSubscriptionsScreen> createState() => _AdminSubscriptionsState();
+}
+
+class _AdminSubscriptionsState extends State<_AdminSubscriptionsScreen> {
+  String _filter = 'all';
+
+  static final _subscribers = <Map<String, dynamic>>[
+    {'name': 'BetStars Gaming', 'email': 'hr@betstars.com', 'plan': 'vip', 'status': 'active', 'expires': '2026-04-17', 'contacts_used': 42, 'revenue': 65.0},
+    {'name': 'CryptoPlay Ltd', 'email': 'jobs@cryptoplay.io', 'plan': 'premium', 'status': 'active', 'expires': '2026-04-10', 'contacts_used': 28, 'revenue': 35.0},
+    {'name': 'LuckySlots', 'email': 'recruit@luckyslots.com', 'plan': 'basic', 'status': 'active', 'expires': '2026-04-05', 'contacts_used': 7, 'revenue': 10.0},
+    {'name': 'NutraHealth', 'email': 'hr@nutrahealth.eu', 'plan': 'premium', 'status': 'active', 'expires': '2026-04-12', 'contacts_used': 35, 'revenue': 35.0},
+    {'name': 'BlockBet', 'email': 'team@blockbet.io', 'plan': 'basic', 'status': 'expired', 'expires': '2026-03-15', 'contacts_used': 0, 'revenue': 10.0},
+    {'name': 'DatingPro', 'email': 'jobs@datingpro.com', 'plan': 'vip', 'status': 'active', 'expires': '2026-04-20', 'contacts_used': 89, 'revenue': 65.0},
+    {'name': 'SlotMaster', 'email': 'hr@slotmaster.com', 'plan': 'basic', 'status': 'trial', 'expires': '2026-04-01', 'contacts_used': 3, 'revenue': 0.0},
+    {'name': 'GambleFi', 'email': 'careers@gamblefi.io', 'plan': 'premium', 'status': 'cancelled', 'expires': '2026-03-20', 'contacts_used': 0, 'revenue': 35.0},
+  ];
+
+  List<Map<String, dynamic>> get _filtered {
+    if (_filter == 'all') return _subscribers;
+    return _subscribers.where((s) => s['status'] == _filter || s['plan'] == _filter).toList();
+  }
+
+  Color _planColor(String plan) {
+    switch (plan) {
+      case 'vip': return GuroJobsTheme.accent;
+      case 'premium': return GuroJobsTheme.primary;
+      case 'basic': return GuroJobsTheme.info;
+      default: return GuroJobsTheme.success;
+    }
+  }
+
+  Color _statusColor(String status) {
+    switch (status) {
+      case 'active': return GuroJobsTheme.success;
+      case 'trial': return GuroJobsTheme.info;
+      case 'expired': return GuroJobsTheme.error;
+      case 'cancelled': return GuroJobsTheme.warning;
+      default: return GuroJobsTheme.success;
+    }
   }
 
   @override
-  void dispose() { _tgCtrl.dispose(); _liCtrl.dispose(); _chatCtrl.dispose(); super.dispose(); }
+  Widget build(BuildContext context) {
+    final filtered = _filtered;
+    final activeCount = _subscribers.where((s) => s['status'] == 'active').length;
+    final trialCount = _subscribers.where((s) => s['status'] == 'trial').length;
+    final totalMRR = _subscribers.where((s) => s['status'] == 'active').fold<double>(0, (sum, s) => sum + (s['revenue'] as double));
 
+    return Scaffold(
+      appBar: AppBar(title: Text(AppStrings.t('adm_subscriptions'))),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          // MRR overview
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(colors: [Color(0xFF015EA7), Color(0xFF6C5CE7)]),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(children: [
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('MRR', style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.8))),
+                Text('\$${totalMRR.toStringAsFixed(0)}', style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w800, color: Colors.white)),
+              ])),
+              Column(children: [
+                _miniStat('$activeCount', AppStrings.t('active'), Colors.white),
+                const SizedBox(height: 8),
+                _miniStat('$trialCount', 'Trial', Colors.white),
+              ]),
+            ]),
+          ),
+          const SizedBox(height: 16),
+
+          // Plan breakdown
+          Row(children: [
+            ...[
+              {'key': 'basic', 'label': 'Basic', 'count': _subscribers.where((s) => s['plan'] == 'basic').length},
+              {'key': 'premium', 'label': 'Premium', 'count': _subscribers.where((s) => s['plan'] == 'premium').length},
+              {'key': 'vip', 'label': 'VIP', 'count': _subscribers.where((s) => s['plan'] == 'vip').length},
+            ].map((p) => Expanded(
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                decoration: BoxDecoration(color: _planColor(p['key'] as String).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+                child: Column(children: [
+                  Text('${p['count']}', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: _planColor(p['key'] as String))),
+                  Text(p['label'] as String, style: TextStyle(fontSize: 12, color: context.textSecondaryC)),
+                ]),
+              ),
+            )),
+          ]),
+          const SizedBox(height: 20),
+
+          // Filter chips
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(children: [
+              _filterChip('all', AppStrings.t('all')),
+              _filterChip('active', AppStrings.t('active')),
+              _filterChip('trial', 'Trial'),
+              _filterChip('expired', AppStrings.t('expired')),
+              _filterChip('cancelled', AppStrings.t('cancelled')),
+            ]),
+          ),
+          const SizedBox(height: 16),
+
+          // Subscribers list
+          Text('${filtered.length} ${AppStrings.t('adm_subscribers')}', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: context.textPrimaryC)),
+          const SizedBox(height: 12),
+          ...filtered.map((sub) => _subscriberCard(context, sub)),
+        ],
+      ),
+    );
+  }
+
+  Widget _miniStat(String value, String label, Color c) {
+    return Row(children: [
+      Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: c)),
+      const SizedBox(width: 6),
+      Text(label, style: TextStyle(fontSize: 12, color: c.withValues(alpha: 0.8))),
+    ]);
+  }
+
+  Widget _filterChip(String key, String label) {
+    final selected = _filter == key;
+    return GestureDetector(
+      onTap: () => setState(() => _filter = key),
+      child: Container(
+        margin: const EdgeInsets.only(right: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: selected ? GuroJobsTheme.primary : context.surfaceBg,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: selected ? GuroJobsTheme.primary : context.dividerC),
+        ),
+        child: Text(label, style: TextStyle(fontSize: 13, fontWeight: selected ? FontWeight.w600 : FontWeight.w400, color: selected ? Colors.white : context.textPrimaryC)),
+      ),
+    );
+  }
+
+  Widget _subscriberCard(BuildContext context, Map<String, dynamic> sub) {
+    final plan = sub['plan'] as String;
+    final status = sub['status'] as String;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: context.cardBg,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: context.dividerC),
+      ),
+      child: Column(children: [
+        Row(children: [
+          Container(
+            width: 44, height: 44,
+            decoration: BoxDecoration(color: _planColor(plan).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+            child: Center(child: Text((sub['name'] as String)[0], style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: _planColor(plan)))),
+          ),
+          const SizedBox(width: 12),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(sub['name'] as String, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: context.textPrimaryC)),
+            Text(sub['email'] as String, style: TextStyle(fontSize: 12, color: context.textSecondaryC)),
+          ])),
+          Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(color: _planColor(plan).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
+              child: Text(ContactPricing.planNames[plan] ?? plan, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: _planColor(plan))),
+            ),
+            const SizedBox(height: 4),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(color: _statusColor(status).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4)),
+              child: Text(status, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: _statusColor(status))),
+            ),
+          ]),
+        ]),
+        const SizedBox(height: 10),
+        Row(children: [
+          _subInfo(context, Icons.calendar_today, 'Expires: ${sub['expires']}'),
+          const SizedBox(width: 16),
+          _subInfo(context, Icons.contacts, '${sub['contacts_used']} contacts'),
+        ]),
+        const SizedBox(height: 10),
+        // Action buttons
+        Row(children: [
+          Expanded(child: OutlinedButton.icon(
+            onPressed: () => _showChangePlan(context, sub),
+            icon: const Icon(Icons.swap_horiz, size: 16),
+            label: Text(AppStrings.t('change_plan')),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: GuroJobsTheme.primary,
+              side: const BorderSide(color: GuroJobsTheme.primary),
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+          )),
+          const SizedBox(width: 8),
+          Expanded(child: OutlinedButton.icon(
+            onPressed: () => _showExtend(context, sub),
+            icon: const Icon(Icons.add_circle_outline, size: 16),
+            label: Text(AppStrings.t('extend')),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: GuroJobsTheme.success,
+              side: const BorderSide(color: GuroJobsTheme.success),
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+          )),
+          const SizedBox(width: 8),
+          IconButton(
+            onPressed: () => _showBlock(context, sub),
+            icon: const Icon(Icons.block, size: 20),
+            color: GuroJobsTheme.error,
+            tooltip: AppStrings.t('block'),
+          ),
+        ]),
+      ]),
+    );
+  }
+
+  Widget _subInfo(BuildContext context, IconData icon, String text) {
+    return Row(children: [
+      Icon(icon, size: 14, color: context.textHintC),
+      const SizedBox(width: 4),
+      Text(text, style: TextStyle(fontSize: 12, color: context.textSecondaryC)),
+    ]);
+  }
+
+  void _showChangePlan(BuildContext context, Map<String, dynamic> sub) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      backgroundColor: context.cardBg,
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Text('${AppStrings.t('change_plan')}: ${sub['name']}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 16),
+          ...['basic', 'premium', 'vip'].map((p) {
+            final current = sub['plan'] == p;
+            return ListTile(
+              leading: Icon(Icons.workspace_premium, color: _planColor(p)),
+              title: Text('${ContactPricing.planNames[p]} — \$${ContactPricing.prices[p]?.toStringAsFixed(0)}/mo', style: TextStyle(fontWeight: current ? FontWeight.w700 : FontWeight.w400)),
+              subtitle: Text('${ContactPricing.limitFor(p)} contacts/day, Team ${ContactPricing.teamLimit[p]}', style: TextStyle(fontSize: 12, color: context.textSecondaryC)),
+              trailing: current ? const Icon(Icons.check_circle, color: GuroJobsTheme.success) : null,
+              onTap: current ? null : () {
+                setState(() => sub['plan'] = p);
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text('${sub['name']} → ${ContactPricing.planNames[p]}'),
+                  backgroundColor: GuroJobsTheme.success, behavior: SnackBarBehavior.floating,
+                ));
+              },
+            );
+          }),
+        ]),
+      ),
+    );
+  }
+
+  void _showExtend(BuildContext context, Map<String, dynamic> sub) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('${AppStrings.t('extend')}: ${sub['name']}'),
+        content: Column(mainAxisSize: MainAxisSize.min, children: [
+          Text(AppStrings.t('extend_confirm')),
+          const SizedBox(height: 16),
+          ...['7 ${AppStrings.t("days")}', '14 ${AppStrings.t("days")}', '30 ${AppStrings.t("days")}'].map((d) => ListTile(
+            title: Text('+$d'),
+            leading: const Icon(Icons.add_circle_outline, color: GuroJobsTheme.success),
+            onTap: () {
+              Navigator.pop(ctx);
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text('${sub['name']} ${AppStrings.t("extended_by")} $d'),
+                backgroundColor: GuroJobsTheme.success, behavior: SnackBarBehavior.floating,
+              ));
+            },
+          )),
+        ]),
+      ),
+    );
+  }
+
+  void _showBlock(BuildContext context, Map<String, dynamic> sub) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('${AppStrings.t('block')}: ${sub['name']}?'),
+        content: Text(AppStrings.t('block_confirm')),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(AppStrings.t('cancel'))),
+          TextButton(
+            onPressed: () {
+              setState(() => sub['status'] = 'cancelled');
+              Navigator.pop(ctx);
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text('${sub['name']} ${AppStrings.t("blocked")}'),
+                backgroundColor: GuroJobsTheme.error, behavior: SnackBarBehavior.floating,
+              ));
+            },
+            child: Text(AppStrings.t('block'), style: const TextStyle(color: GuroJobsTheme.error)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ContactPricingWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(color: context.surfaceBg, borderRadius: BorderRadius.circular(12), border: Border.all(color: context.dividerC)),
-      child: Column(children: [
-        _PricingField(label: 'Telegram', icon: Icons.send, controller: _tgCtrl),
-        const SizedBox(height: 12),
-        _PricingField(label: 'LinkedIn', icon: Icons.business_center, controller: _liCtrl),
-        const SizedBox(height: 12),
-        _PricingField(label: 'Direct Message', icon: Icons.chat_bubble_outline, controller: _chatCtrl),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text('Daily Contact Reveal Limits', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: context.textPrimaryC)),
+        const SizedBox(height: 6),
+        Text('Contacts per day by employer plan', style: TextStyle(fontSize: 13, color: context.textSecondaryC)),
         const SizedBox(height: 16),
-        SizedBox(
-          width: double.infinity, height: 44,
-          child: ElevatedButton.icon(
-            onPressed: () {
-              ContactPricing.telegramPrice = double.tryParse(_tgCtrl.text) ?? 5.0;
-              ContactPricing.linkedinPrice = double.tryParse(_liCtrl.text) ?? 5.0;
-              ContactPricing.chatPrice = double.tryParse(_chatCtrl.text) ?? 5.0;
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: const Text('Pricing updated!'), backgroundColor: GuroJobsTheme.success,
-                behavior: SnackBarBehavior.floating, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              ));
-            },
-            icon: const Icon(Icons.save, size: 18),
-            label: const Text('Save Pricing'),
-            style: ElevatedButton.styleFrom(backgroundColor: GuroJobsTheme.primary, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-          ),
-        ),
+        ...ContactPricing.dailyLimits.entries.map((entry) => Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Row(children: [
+            const Icon(Icons.workspace_premium, size: 18, color: GuroJobsTheme.primary),
+            const SizedBox(width: 10),
+            Expanded(child: Text(ContactPricing.planNames[entry.key] ?? entry.key, style: TextStyle(fontSize: 14, color: context.textPrimaryC))),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+              decoration: BoxDecoration(color: GuroJobsTheme.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+              child: Text('${entry.value}/day', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: GuroJobsTheme.primary)),
+            ),
+          ]),
+        )),
       ]),
     );
   }

@@ -25,7 +25,7 @@ class HelpScreen extends StatelessWidget {
           _faq(context, 'How to apply for a job?', 'Go to Jobs tab, find a job you like and tap Apply.'),
           _faq(context, 'How to upload CV?', 'Go to Profile -> My CV and upload your resume in PDF or DOC format.'),
           _faq(context, 'How to change language?', 'Go to Profile -> Language and select your preferred language.'),
-          _faq(context, 'How to contact an employer?', 'After applying, the employer will contact you via email or Telegram.'),
+          _faq(context, 'How to contact an employer?', 'After applying, the employer will contact you through the platform chat. All communication happens on the platform.'),
         ],
       ),
     );

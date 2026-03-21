@@ -4,7 +4,9 @@ import '../../core/theme.dart';
 import '../../core/localization.dart';
 import '../../core/pricing.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/contact_credits_provider.dart';
 import '../../providers/lang_provider.dart';
+import '../../providers/theme_provider.dart';
 import '../client/candidate/notifications_screen.dart';
 import '../client/candidate/settings_screen.dart';
 import '../client/candidate/help_screen.dart';
@@ -456,6 +458,7 @@ class _EmpProfileTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
+    final lang = context.watch<LangProvider>();
     return SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -503,6 +506,39 @@ class _EmpProfileTab extends StatelessWidget {
             ),
             const SizedBox(height: 20),
 
+            // Language selector
+            _ProfileMenuItem(
+              icon: Icons.language,
+              label: AppStrings.t('language'),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '${AppStrings.languageFlags[lang.currentLang]} ${AppStrings.languageNames[lang.currentLang]}',
+                    style: TextStyle(fontSize: 13, color: context.textSecondaryC),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(Icons.chevron_right, color: context.textHintC, size: 20),
+                ],
+              ),
+              onTap: () => _showLanguagePicker(context, lang),
+            ),
+
+            // Dark mode toggle
+            Builder(builder: (context) {
+              final themeProv = context.watch<ThemeProvider>();
+              return _ProfileMenuItem(
+                icon: themeProv.isDark ? Icons.dark_mode : Icons.light_mode,
+                label: AppStrings.t('dark_mode'),
+                trailing: Switch(
+                  value: themeProv.isDark,
+                  onChanged: (_) => themeProv.toggle(),
+                  activeColor: GuroJobsTheme.primary,
+                ),
+                onTap: () => themeProv.toggle(),
+              );
+            }),
+
             // Menu
             _ProfileMenuItem(icon: Icons.business_outlined, label: AppStrings.t('emp_company_profile'), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const _CompanyProfileScreen()))),
             _ProfileMenuItem(icon: Icons.description_outlined, label: AppStrings.t('emp_subscription'), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BillingScreen()))),
@@ -517,6 +553,36 @@ class _EmpProfileTab extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  static void _showLanguagePicker(BuildContext context, LangProvider lang) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      backgroundColor: context.cardBg,
+      builder: (ctx) {
+        return Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(AppStrings.t('language'), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+              const SizedBox(height: 16),
+              ...AppStrings.languageNames.entries.map((entry) {
+                final isSelected = lang.currentLang == entry.key;
+                return ListTile(
+                  leading: Text(AppStrings.languageFlags[entry.key] ?? '', style: const TextStyle(fontSize: 24)),
+                  title: Text(entry.value, style: TextStyle(fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400)),
+                  trailing: isSelected ? const Icon(Icons.check_circle, color: GuroJobsTheme.primary) : null,
+                  onTap: () { lang.setLang(entry.key); Navigator.pop(ctx); },
+                );
+              }),
+              const SizedBox(height: 10),
+            ],
+          ),
+        );
+      },
     );
   }
 }
@@ -975,8 +1041,6 @@ class _CandidateDetailSheet extends StatefulWidget {
 
 class _CandidateDetailSheetState extends State<_CandidateDetailSheet> {
   Map<String, dynamic> get candidate => widget.candidate;
-  Set<String> get _unlocked => _unlockedContacts[candidate['name']] ?? {};
-  bool _isUnlocked(String type) => _unlocked.contains(type);
   late TextEditingController _noteCtrl;
 
   @override
@@ -987,14 +1051,53 @@ class _CandidateDetailSheetState extends State<_CandidateDetailSheet> {
   @override
   void dispose() { _noteCtrl.dispose(); super.dispose(); }
 
-  void _unlock(String type) {
-    final name = candidate['name'] as String;
-    _unlockedContacts.putIfAbsent(name, () => {});
-    setState(() => _unlockedContacts[name]!.add(type));
-  }
+  void _revealContact(ContactCreditsProvider credits) {
+    final candidateId = candidate['name'] as String;
 
-  void _showPayDialog(String type, String price) {
-    final label = type == 'telegram' ? 'Telegram' : type == 'linkedin' ? 'LinkedIn' : 'Direct Message';
+    if (credits.isUnlocked(candidateId)) return; // already unlocked
+
+    if (!credits.hasCredits) {
+      // No credits left — show upgrade dialog
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(children: [
+            const Icon(Icons.block, color: GuroJobsTheme.error, size: 22),
+            const SizedBox(width: 8),
+            Expanded(child: Text(AppStrings.t('no_credits_left'), style: const TextStyle(fontSize: 17))),
+          ]),
+          content: Column(mainAxisSize: MainAxisSize.min, children: [
+            Text(AppStrings.t('no_credits_desc'),
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]), textAlign: TextAlign.center),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(color: GuroJobsTheme.error.withValues(alpha: 0.06), borderRadius: BorderRadius.circular(12)),
+              child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                Text('0 / ${credits.dailyLimit}', style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: GuroJobsTheme.error)),
+                const SizedBox(width: 8),
+                Text(AppStrings.t('daily_limit'), style: TextStyle(fontSize: 14, color: Colors.grey[600])),
+              ]),
+            ),
+          ]),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: Text(AppStrings.t('cancel'), style: TextStyle(color: Colors.grey[600]))),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const BillingScreen()));
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: GuroJobsTheme.primary, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+              child: Text(AppStrings.t('upgrade_plan')),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    // Has credits — confirm reveal
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
@@ -1002,17 +1105,24 @@ class _CandidateDetailSheetState extends State<_CandidateDetailSheet> {
         title: Row(children: [
           const Icon(Icons.lock_open, color: GuroJobsTheme.primary, size: 22),
           const SizedBox(width: 8),
-          Text('Unlock $label', style: const TextStyle(fontSize: 18)),
+          Expanded(child: Text(AppStrings.t('reveal_contact'), style: const TextStyle(fontSize: 17))),
         ]),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
-          Text('Unlock ${candidate['name']}\'s $label contact for $price',
+          Text(AppStrings.t('reveal_contact_confirm'),
             style: TextStyle(fontSize: 14, color: Colors.grey[600]), textAlign: TextAlign.center),
+          const SizedBox(height: 10),
+          Text(AppStrings.t('reveal_contact_cost'),
+            style: TextStyle(fontSize: 13, color: Colors.grey[500]), textAlign: TextAlign.center),
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(color: GuroJobsTheme.primary.withOpacity(0.06), borderRadius: BorderRadius.circular(12)),
+            decoration: BoxDecoration(color: GuroJobsTheme.primary.withValues(alpha: 0.06), borderRadius: BorderRadius.circular(12)),
             child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              Text(price, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: GuroJobsTheme.primary)),
+              const Icon(Icons.confirmation_number_outlined, color: GuroJobsTheme.primary, size: 20),
+              const SizedBox(width: 8),
+              Text('${credits.remaining}', style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: GuroJobsTheme.primary)),
+              const SizedBox(width: 6),
+              Text(AppStrings.t('credits_remaining'), style: TextStyle(fontSize: 12, color: Colors.grey[600])),
             ]),
           ),
         ]),
@@ -1021,16 +1131,18 @@ class _CandidateDetailSheetState extends State<_CandidateDetailSheet> {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              _unlock(type);
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: Text('$label contact unlocked!'),
-                backgroundColor: GuroJobsTheme.success,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              ));
+              final ok = credits.revealContact(candidateId);
+              if (ok) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text(AppStrings.t('contact_revealed')),
+                  backgroundColor: GuroJobsTheme.success,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ));
+              }
             },
             style: ElevatedButton.styleFrom(backgroundColor: GuroJobsTheme.primary, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-            child: const Text('Pay & Unlock'),
+            child: Text(AppStrings.t('reveal_contact')),
           ),
         ],
       ),
@@ -1040,9 +1152,9 @@ class _CandidateDetailSheetState extends State<_CandidateDetailSheet> {
   @override
   Widget build(BuildContext context) {
     final status = candidate['status'] as String;
-    final chatUnlocked = _isUnlocked('chat');
-    final tgUnlocked = _isUnlocked('telegram');
-    final liUnlocked = _isUnlocked('linkedin');
+    final credits = context.watch<ContactCreditsProvider>();
+    final candidateId = candidate['name'] as String;
+    final isRevealed = credits.isUnlocked(candidateId);
 
     return DraggableScrollableSheet(
       initialChildSize: 0.9,
@@ -1064,7 +1176,7 @@ class _CandidateDetailSheetState extends State<_CandidateDetailSheet> {
             Row(children: [
               Container(
                 width: 60, height: 60,
-                decoration: BoxDecoration(color: GuroJobsTheme.primary.withOpacity(0.12), borderRadius: BorderRadius.circular(14)),
+                decoration: BoxDecoration(color: GuroJobsTheme.primary.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(14)),
                 child: Center(child: Text((candidate['name'] as String)[0], style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: GuroJobsTheme.primary))),
               ),
               const SizedBox(width: 14),
@@ -1098,53 +1210,69 @@ class _CandidateDetailSheetState extends State<_CandidateDetailSheet> {
               const SizedBox(height: 20),
             ],
 
-            // ═══ CONTACTS PAYWALL ═══
+            // ═══ CONTACTS SECTION ═══
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: context.surfaceBg,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: context.dividerC),
+                border: Border.all(color: isRevealed ? GuroJobsTheme.success.withValues(alpha: 0.3) : context.dividerC),
               ),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Row(children: [
-                  Icon(Icons.contact_phone_outlined, size: 18, color: context.textPrimaryC),
+                  Icon(isRevealed ? Icons.contact_phone : Icons.lock_outline, size: 18, color: isRevealed ? GuroJobsTheme.success : context.textPrimaryC),
                   const SizedBox(width: 8),
-                  Text('Contacts', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: context.textPrimaryC)),
+                  Text(AppStrings.t('contacts'), style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: context.textPrimaryC)),
+                  const Spacer(),
+                  if (!isRevealed)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(color: GuroJobsTheme.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+                      child: Text('${credits.remaining}/${credits.dailyLimit}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: GuroJobsTheme.primary)),
+                    ),
                 ]),
                 const SizedBox(height: 14),
 
-                // Telegram
-                _ContactRow(
-                  icon: Icons.send,
-                  label: 'Telegram',
-                  value: tgUnlocked ? (candidate['telegram'] as String? ?? '—') : null,
-                  price: ContactPricing.telegramPriceStr,
-                  unlocked: tgUnlocked,
-                  onUnlock: () => _showPayDialog('telegram', ContactPricing.telegramPriceStr),
-                ),
-                const SizedBox(height: 10),
+                if (isRevealed) ...[
+                  // REVEALED — show all contacts
+                  if (candidate['email'] != null)
+                    _RevealedContactRow(icon: Icons.email_outlined, label: AppStrings.t('contact_email'), value: candidate['email'] as String),
+                  if (candidate['telegram'] != null)
+                    _RevealedContactRow(icon: Icons.send, label: AppStrings.t('contact_telegram'), value: candidate['telegram'] as String),
+                  if (candidate['phone'] != null)
+                    _RevealedContactRow(icon: Icons.phone_outlined, label: AppStrings.t('contact_phone'), value: candidate['phone'] as String? ?? '—'),
+                  // LinkedIn — only Premium/VIP
+                  if (candidate['linkedin'] != null)
+                    ContactPricing.hasLinkedin(credits.plan)
+                      ? _RevealedContactRow(icon: Icons.business_center, label: 'LinkedIn', value: candidate['linkedin'] as String)
+                      : _LockedFeatureRow(icon: Icons.business_center, label: 'LinkedIn', badge: 'Premium'),
+                ] else ...[
+                  // HIDDEN — blurred placeholders
+                  _HiddenContactRow(icon: Icons.email_outlined, label: AppStrings.t('contact_email')),
+                  const SizedBox(height: 8),
+                  _HiddenContactRow(icon: Icons.send, label: AppStrings.t('contact_telegram')),
+                  const SizedBox(height: 8),
+                  _HiddenContactRow(icon: Icons.phone_outlined, label: AppStrings.t('contact_phone')),
+                  const SizedBox(height: 8),
+                  _LockedFeatureRow(icon: Icons.business_center, label: 'LinkedIn', badge: 'Premium'),
+                  const SizedBox(height: 14),
 
-                // LinkedIn
-                _ContactRow(
-                  icon: Icons.business_center,
-                  label: 'LinkedIn',
-                  value: liUnlocked ? (candidate['linkedin'] as String? ?? '—') : null,
-                  price: ContactPricing.linkedinPriceStr,
-                  unlocked: liUnlocked,
-                  onUnlock: () => _showPayDialog('linkedin', ContactPricing.linkedinPriceStr),
-                ),
-                const SizedBox(height: 10),
-
-                // Chat DM
-                _ContactRow(
-                  icon: Icons.chat_bubble_outline,
-                  label: 'Direct Message',
-                  value: chatUnlocked ? 'Available' : null,
-                  price: ContactPricing.chatPriceStr,
-                  unlocked: chatUnlocked,
-                  onUnlock: () => _showPayDialog('chat', ContactPricing.chatPriceStr),
-                ),
+                  // Reveal button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () => _revealContact(credits),
+                      icon: const Icon(Icons.lock_open, size: 18),
+                      label: Text('${AppStrings.t('reveal_contact')}  (-1 ${AppStrings.t('daily_limit').toLowerCase()})'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: GuroJobsTheme.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                    ),
+                  ),
+                ],
               ]),
             ),
             const SizedBox(height: 20),
@@ -1185,14 +1313,14 @@ class _CandidateDetailSheetState extends State<_CandidateDetailSheet> {
             Row(children: [
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: chatUnlocked ? () {
+                  onPressed: isRevealed ? () {
                     Navigator.pop(context);
                     Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatScreen()));
-                  } : () => _showPayDialog('chat', ContactPricing.chatPriceStr),
-                  icon: Icon(chatUnlocked ? Icons.chat_bubble_outline : Icons.lock_outline, size: 18),
-                  label: Text(chatUnlocked ? AppStrings.t('emp_write_msg') : '${ContactPricing.chatPriceStr} — Chat'),
+                  } : () => _revealContact(credits),
+                  icon: Icon(isRevealed ? Icons.chat_bubble_outline : Icons.lock_outline, size: 18),
+                  label: Text(isRevealed ? AppStrings.t('emp_write_msg') : AppStrings.t('reveal_contact')),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: chatUnlocked ? GuroJobsTheme.primary : Colors.grey[400],
+                    backgroundColor: isRevealed ? GuroJobsTheme.primary : Colors.grey[400],
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -1219,48 +1347,89 @@ class _CandidateDetailSheetState extends State<_CandidateDetailSheet> {
   }
 }
 
-class _ContactRow extends StatelessWidget {
+/// Revealed contact — shows actual data
+class _RevealedContactRow extends StatelessWidget {
   final IconData icon;
   final String label;
-  final String? value;
-  final String price;
-  final bool unlocked;
-  final VoidCallback onUnlock;
+  final String value;
 
-  const _ContactRow({required this.icon, required this.label, this.value, required this.price, required this.unlocked, required this.onUnlock});
+  const _RevealedContactRow({required this.icon, required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(children: [
+        Icon(icon, size: 18, color: GuroJobsTheme.primary),
+        const SizedBox(width: 10),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(label, style: TextStyle(fontSize: 11, color: context.textHintC)),
+          Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: GuroJobsTheme.primary)),
+        ])),
+        const Icon(Icons.check_circle, size: 18, color: GuroJobsTheme.success),
+      ]),
+    );
+  }
+}
+
+/// Hidden contact — blurred placeholder
+class _HiddenContactRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _HiddenContactRow({required this.icon, required this.label});
 
   @override
   Widget build(BuildContext context) {
     return Row(children: [
-      Icon(icon, size: 18, color: unlocked ? GuroJobsTheme.primary : Colors.grey[400]),
+      Icon(icon, size: 18, color: Colors.grey[400]),
       const SizedBox(width: 10),
-      Expanded(
-        child: unlocked
-            ? Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(label, style: TextStyle(fontSize: 11, color: context.textHintC)),
-                Text(value ?? '—', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: GuroJobsTheme.primary)),
-              ])
-            : Text(label, style: TextStyle(fontSize: 14, color: Colors.grey[500])),
+      Text(label, style: TextStyle(fontSize: 14, color: Colors.grey[500])),
+      const Spacer(),
+      Container(
+        width: 90, height: 16,
+        decoration: BoxDecoration(
+          color: Colors.grey[300],
+          borderRadius: BorderRadius.circular(4),
+        ),
       ),
-      if (!unlocked)
-        GestureDetector(
-          onTap: onUnlock,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(colors: [Color(0xFF015EA7), Color(0xFF0277BD)]),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(mainAxisSize: MainAxisSize.min, children: [
-              const Icon(Icons.lock_open, size: 14, color: Colors.white),
-              const SizedBox(width: 4),
-              Text(price, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
-            ]),
-          ),
-        )
-      else
-        const Icon(Icons.check_circle, size: 18, color: GuroJobsTheme.success),
+      const SizedBox(width: 8),
+      Icon(Icons.lock_outline, size: 16, color: Colors.grey[400]),
     ]);
+  }
+}
+
+/// Locked feature — shows plan badge required
+class _LockedFeatureRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String badge;
+
+  const _LockedFeatureRow({required this.icon, required this.label, required this.badge});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(children: [
+        Icon(icon, size: 18, color: Colors.grey[400]),
+        const SizedBox(width: 10),
+        Text(label, style: TextStyle(fontSize: 14, color: Colors.grey[500])),
+        const Spacer(),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(colors: [Color(0xFF6C5CE7), Color(0xFF015EA7)]),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            const Icon(Icons.lock, size: 10, color: Colors.white),
+            const SizedBox(width: 4),
+            Text(badge, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.white)),
+          ]),
+        ),
+      ]),
+    );
   }
 }
 
@@ -1319,15 +1488,15 @@ void _showCandidateCvDialog(BuildContext context, Map<String, dynamic> candidate
                 const SizedBox(width: 6),
                 Text(candidate['location'] as String, style: const TextStyle(fontSize: 14)),
               ]),
-            // NO contacts shown in CV — contacts are behind paywall
+            // Contacts are only visible after reveal
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: Colors.orange.withOpacity(0.08), borderRadius: BorderRadius.circular(10)),
+              decoration: BoxDecoration(color: Colors.orange.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(10)),
               child: Row(children: [
                 Icon(Icons.info_outline, size: 16, color: Colors.orange[700]),
                 const SizedBox(width: 8),
-                Expanded(child: Text('Contacts hidden. Unlock in candidate profile.',
+                Expanded(child: Text(AppStrings.t('contacts_hidden'),
                   style: TextStyle(fontSize: 12, color: Colors.orange[700]))),
               ]),
             ),
@@ -1463,12 +1632,17 @@ class _CreateJobSheetState extends State<_CreateJobSheet> {
     }
   }
 
+  final _requirementsCtrl = TextEditingController();
+  final _tagsCtrl = TextEditingController();
+  String _level = 'Middle';
+
   static const _types = ['Full-time', 'Part-time', 'Contract', 'Freelance'];
   static const _locations = ['Remote', 'Office', 'Hybrid'];
+  static const _levels = ['C-Level', 'Head', 'Senior', 'Middle', 'Junior'];
   static const _verticals = ['gambling', 'betting', 'crypto', 'nutra', 'dating', 'ecommerce', 'fintech', 'other'];
 
   @override
-  void dispose() { _titleCtrl.dispose(); _salaryCtrl.dispose(); _descCtrl.dispose(); super.dispose(); }
+  void dispose() { _titleCtrl.dispose(); _salaryCtrl.dispose(); _descCtrl.dispose(); _requirementsCtrl.dispose(); _tagsCtrl.dispose(); super.dispose(); }
 
   @override
   Widget build(BuildContext context) {
@@ -1542,25 +1716,61 @@ class _CreateJobSheetState extends State<_CreateJobSheet> {
             ),
             const SizedBox(height: 16),
 
+            _buildLabel(context, AppStrings.t('experience')),
+            Wrap(
+              spacing: 8,
+              children: _levels.map((l) => ChoiceChip(
+                label: Text(l),
+                selected: _level == l,
+                onSelected: (s) { if (s) setState(() => _level = l); },
+                selectedColor: GuroJobsTheme.primary.withValues(alpha: 0.15),
+                labelStyle: TextStyle(color: _level == l ? GuroJobsTheme.primary : context.textPrimaryC, fontWeight: _level == l ? FontWeight.w600 : FontWeight.normal),
+              )).toList(),
+            ),
+            const SizedBox(height: 16),
+
             _buildLabel(context, AppStrings.t('description')),
             _buildInput(context, _descCtrl, AppStrings.t('emp_job_desc_hint'), maxLines: 5),
+            const SizedBox(height: 16),
+
+            _buildLabel(context, AppStrings.t('requirements')),
+            _buildInput(context, _requirementsCtrl, AppStrings.t('requirements_hint'), maxLines: 4),
+            const SizedBox(height: 16),
+
+            _buildLabel(context, AppStrings.t('tags')),
+            _buildInput(context, _tagsCtrl, AppStrings.t('tags_hint')),
             const SizedBox(height: 24),
 
+            // Preview & Publish button
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
+              child: ElevatedButton.icon(
                 onPressed: () {
-                  if (_titleCtrl.text.isEmpty) return;
+                  if (_titleCtrl.text.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text(AppStrings.t('emp_title_required')),
+                      backgroundColor: GuroJobsTheme.error,
+                      behavior: SnackBarBehavior.floating,
+                    ));
+                    return;
+                  }
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(AppStrings.t('emp_job_created')),
-                    backgroundColor: GuroJobsTheme.success,
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  ));
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => _JobPreviewScreen(
+                    title: _titleCtrl.text,
+                    salary: _salaryCtrl.text,
+                    description: _descCtrl.text,
+                    requirements: _requirementsCtrl.text,
+                    tags: _tagsCtrl.text,
+                    type: _type,
+                    location: _location,
+                    level: _level,
+                    vertical: _vertical,
+                    isEditing: _isEditing,
+                  )));
                 },
+                icon: const Icon(Icons.visibility, size: 18),
+                label: Text(AppStrings.t('preview_and_publish'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                 style: ElevatedButton.styleFrom(backgroundColor: GuroJobsTheme.primary, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                child: Text(AppStrings.t('emp_publish_job'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
               ),
             ),
           ],
@@ -1692,8 +1902,9 @@ class _ProfileMenuItem extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
   final Color? color;
+  final Widget? trailing;
 
-  const _ProfileMenuItem({required this.icon, required this.label, required this.onTap, this.color});
+  const _ProfileMenuItem({required this.icon, required this.label, required this.onTap, this.color, this.trailing});
 
   @override
   Widget build(BuildContext context) {
@@ -1703,11 +1914,390 @@ class _ProfileMenuItem extends StatelessWidget {
       child: ListTile(
         leading: Icon(icon, color: c, size: 22),
         title: Text(label, style: TextStyle(fontSize: 15, color: c)),
-        trailing: Icon(Icons.chevron_right, color: context.textHintC, size: 20),
+        trailing: trailing ?? Icon(Icons.chevron_right, color: context.textHintC, size: 20),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         onTap: onTap,
       ),
     );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// JOB PREVIEW → PUBLISH FLOW
+// ═══════════════════════════════════════════════════════════════
+
+class _JobPreviewScreen extends StatelessWidget {
+  final String title, salary, description, requirements, tags, type, location, level, vertical;
+  final bool isEditing;
+
+  const _JobPreviewScreen({
+    required this.title, required this.salary, required this.description,
+    required this.requirements, required this.tags, required this.type,
+    required this.location, required this.level, required this.vertical,
+    required this.isEditing,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(AppStrings.t('job_preview'))),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          // Header card
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(colors: [Color(0xFF015EA7), Color(0xFF0288D1)]),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(8)),
+                child: Text(AppStrings.t(vertical), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white)),
+              ),
+              const SizedBox(height: 12),
+              Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white)),
+              const SizedBox(height: 8),
+              Wrap(spacing: 10, runSpacing: 6, children: [
+                _chip(Icons.work_outline, type),
+                _chip(Icons.location_on_outlined, location),
+                _chip(Icons.timeline, level),
+                if (salary.isNotEmpty) _chip(Icons.payments_outlined, salary),
+              ]),
+            ]),
+          ),
+          const SizedBox(height: 24),
+
+          // Description
+          if (description.isNotEmpty) ...[
+            Text(AppStrings.t('description'), style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: context.textPrimaryC)),
+            const SizedBox(height: 8),
+            Text(description, style: TextStyle(fontSize: 14, color: context.textSecondaryC, height: 1.6)),
+            const SizedBox(height: 20),
+          ],
+
+          // Requirements
+          if (requirements.isNotEmpty) ...[
+            Text(AppStrings.t('requirements'), style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: context.textPrimaryC)),
+            const SizedBox(height: 8),
+            ...requirements.split('\n').where((l) => l.trim().isNotEmpty).map((line) => Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                const Icon(Icons.check_circle_outline, size: 16, color: GuroJobsTheme.primary),
+                const SizedBox(width: 8),
+                Expanded(child: Text(line.trim(), style: TextStyle(fontSize: 14, color: context.textSecondaryC))),
+              ]),
+            )),
+            const SizedBox(height: 20),
+          ],
+
+          // Tags
+          if (tags.isNotEmpty) ...[
+            Text(AppStrings.t('tags'), style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: context.textPrimaryC)),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8, runSpacing: 8,
+              children: tags.split(',').map((t) => t.trim()).where((t) => t.isNotEmpty).map((t) => Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(color: GuroJobsTheme.primary.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(8)),
+                child: Text(t, style: const TextStyle(fontSize: 12, color: GuroJobsTheme.primary)),
+              )).toList(),
+            ),
+            const SizedBox(height: 20),
+          ],
+
+          // Info note
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(color: const Color(0xFFF3E5F5), borderRadius: BorderRadius.circular(12)),
+            child: Row(children: [
+              Icon(Icons.info_outline, size: 18, color: Colors.purple[700]),
+              const SizedBox(width: 10),
+              Expanded(child: Text(AppStrings.t('job_preview_note'), style: TextStyle(fontSize: 12, color: Colors.purple[800]))),
+            ]),
+          ),
+          const SizedBox(height: 24),
+
+          // Buttons
+          Row(children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.edit, size: 18),
+                label: Text(AppStrings.t('edit')),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: GuroJobsTheme.primary,
+                  side: const BorderSide(color: GuroJobsTheme.primary),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => _JobPublishingScreen(
+                  title: title, vertical: vertical, isEditing: isEditing,
+                ))),
+                icon: const Icon(Icons.publish, size: 18),
+                label: Text(AppStrings.t('emp_publish_job')),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: GuroJobsTheme.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ),
+          ]),
+        ]),
+      ),
+    );
+  }
+
+  Widget _chip(IconData icon, String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(6)),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        Icon(icon, size: 14, color: Colors.white),
+        const SizedBox(width: 4),
+        Text(text, style: const TextStyle(fontSize: 12, color: Colors.white)),
+      ]),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// JOB PUBLISHING — animated processing
+// ═══════════════════════════════════════════════════════════════
+
+class _JobPublishingScreen extends StatefulWidget {
+  final String title, vertical;
+  final bool isEditing;
+
+  const _JobPublishingScreen({required this.title, required this.vertical, required this.isEditing});
+
+  @override
+  State<_JobPublishingScreen> createState() => _JobPublishingState();
+}
+
+class _JobPublishingState extends State<_JobPublishingScreen> {
+  int _step = 0;
+  final _steps = <String>[];
+
+  @override
+  void initState() {
+    super.initState();
+    _steps.addAll([
+      AppStrings.t('step_validating_job'),
+      AppStrings.t('step_checking_plan'),
+      AppStrings.t('step_publishing'),
+      AppStrings.t('step_indexing'),
+    ]);
+    _runSteps();
+  }
+
+  Future<void> _runSteps() async {
+    for (int i = 0; i < _steps.length; i++) {
+      await Future.delayed(Duration(milliseconds: i == _steps.length - 1 ? 600 : 1000));
+      if (!mounted) return;
+      setState(() => _step = i + 1);
+    }
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (!mounted) return;
+    Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => _JobPublishedScreen(
+      title: widget.title, vertical: widget.vertical, isEditing: widget.isEditing,
+    )));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(40),
+            child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+              SizedBox(
+                width: 80, height: 80,
+                child: CircularProgressIndicator(
+                  value: _step >= _steps.length ? 1.0 : null,
+                  strokeWidth: 4, color: GuroJobsTheme.primary,
+                ),
+              ),
+              const SizedBox(height: 30),
+              Text(widget.isEditing ? AppStrings.t('updating_job') : AppStrings.t('publishing_job'),
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: context.textPrimaryC)),
+              const SizedBox(height: 8),
+              Text('"${widget.title}"', style: TextStyle(fontSize: 15, color: context.textSecondaryC), textAlign: TextAlign.center),
+              const SizedBox(height: 30),
+              ...List.generate(_steps.length, (i) {
+                final done = _step > i;
+                final current = _step == i;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Row(children: [
+                    done
+                      ? const Icon(Icons.check_circle, size: 22, color: GuroJobsTheme.success)
+                      : current
+                        ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2, color: GuroJobsTheme.primary))
+                        : Icon(Icons.radio_button_unchecked, size: 22, color: context.dividerC),
+                    const SizedBox(width: 12),
+                    Text(_steps[i], style: TextStyle(
+                      fontSize: 14,
+                      color: done ? GuroJobsTheme.success : (current ? context.textPrimaryC : context.textHintC),
+                      fontWeight: current ? FontWeight.w600 : FontWeight.w400,
+                    )),
+                  ]),
+                );
+              }),
+            ]),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// JOB PUBLISHED — success screen
+// ═══════════════════════════════════════════════════════════════
+
+class _JobPublishedScreen extends StatelessWidget {
+  final String title, vertical;
+  final bool isEditing;
+
+  const _JobPublishedScreen({required this.title, required this.vertical, required this.isEditing});
+
+  @override
+  Widget build(BuildContext context) {
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(children: [
+              const SizedBox(height: 40),
+
+              // Success icon
+              Container(
+                width: 100, height: 100,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: GuroJobsTheme.success.withValues(alpha: 0.12),
+                ),
+                child: const Icon(Icons.check_circle, size: 60, color: GuroJobsTheme.success),
+              ),
+              const SizedBox(height: 20),
+              Text(isEditing ? AppStrings.t('job_updated') : AppStrings.t('job_published'),
+                style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: context.textPrimaryC)),
+              const SizedBox(height: 8),
+              Text('"$title"', style: TextStyle(fontSize: 16, color: context.textSecondaryC), textAlign: TextAlign.center),
+              const SizedBox(height: 30),
+
+              // Stats card
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: context.cardBg,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [BoxShadow(color: context.shadowC, blurRadius: 10, offset: const Offset(0, 4))],
+                ),
+                child: Column(children: [
+                  _infoRow(context, AppStrings.t('status'), AppStrings.t('active'), GuroJobsTheme.success),
+                  _infoRow(context, AppStrings.t('emp_vertical'), AppStrings.t(vertical), GuroJobsTheme.primary),
+                  _infoRow(context, AppStrings.t('visibility'), AppStrings.t('public'), GuroJobsTheme.info),
+                  _infoRow(context, AppStrings.t('posted_at'), _now(), context.textSecondaryC),
+                  const SizedBox(height: 12),
+                  Divider(color: context.dividerC),
+                  const SizedBox(height: 12),
+                  Row(children: [
+                    Icon(Icons.info_outline, size: 14, color: context.textHintC),
+                    const SizedBox(width: 6),
+                    Expanded(child: Text(AppStrings.t('job_visible_note'), style: TextStyle(fontSize: 12, color: context.textHintC))),
+                  ]),
+                ]),
+              ),
+              const SizedBox(height: 20),
+
+              // What happens next
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: GuroJobsTheme.primary.withValues(alpha: 0.06),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: GuroJobsTheme.primary.withValues(alpha: 0.15)),
+                ),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(AppStrings.t('what_happens_next'), style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: context.textPrimaryC)),
+                  const SizedBox(height: 14),
+                  _nextStep(context, '1', AppStrings.t('next_candidates_see')),
+                  _nextStep(context, '2', AppStrings.t('next_applications')),
+                  _nextStep(context, '3', AppStrings.t('next_review')),
+                ]),
+              ),
+              const SizedBox(height: 30),
+
+              // Done button
+              SizedBox(
+                width: double.infinity, height: 56,
+                child: ElevatedButton.icon(
+                  onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
+                  icon: const Icon(Icons.dashboard, size: 20),
+                  label: Text(AppStrings.t('back_to_dashboard'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: GuroJobsTheme.primary, foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                ),
+              ),
+            ]),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _infoRow(BuildContext context, String label, String value, Color valueColor) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+        Text(label, style: TextStyle(fontSize: 13, color: context.textSecondaryC)),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(color: valueColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
+          child: Text(value, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: valueColor)),
+        ),
+      ]),
+    );
+  }
+
+  Widget _nextStep(BuildContext context, String num, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Container(
+          width: 24, height: 24,
+          decoration: BoxDecoration(color: GuroJobsTheme.primary, borderRadius: BorderRadius.circular(12)),
+          child: Center(child: Text(num, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white))),
+        ),
+        const SizedBox(width: 10),
+        Expanded(child: Text(text, style: TextStyle(fontSize: 14, color: context.textSecondaryC, height: 1.4))),
+      ]),
+    );
+  }
+
+  String _now() {
+    final n = DateTime.now();
+    return '${n.day.toString().padLeft(2, '0')}.${n.month.toString().padLeft(2, '0')}.${n.year} ${n.hour.toString().padLeft(2, '0')}:${n.minute.toString().padLeft(2, '0')}';
   }
 }
 
@@ -1729,10 +2319,11 @@ class _CompanyProfileScreenState extends State<_CompanyProfileScreen> {
   final _sizeCtrl = TextEditingController(text: '50-200');
   final _emailCtrl = TextEditingController(text: 'hr@demogaming.com');
   final _phoneCtrl = TextEditingController(text: '+356 2123 4567');
+  final _telegramCtrl = TextEditingController(text: '@demogaming');
   String _vertical = 'gambling';
 
   @override
-  void dispose() { _nameCtrl.dispose(); _descCtrl.dispose(); _websiteCtrl.dispose(); _locationCtrl.dispose(); _sizeCtrl.dispose(); _emailCtrl.dispose(); _phoneCtrl.dispose(); super.dispose(); }
+  void dispose() { _nameCtrl.dispose(); _descCtrl.dispose(); _websiteCtrl.dispose(); _locationCtrl.dispose(); _sizeCtrl.dispose(); _emailCtrl.dispose(); _phoneCtrl.dispose(); _telegramCtrl.dispose(); super.dispose(); }
 
   @override
   Widget build(BuildContext context) {
@@ -1763,6 +2354,7 @@ class _CompanyProfileScreenState extends State<_CompanyProfileScreen> {
           _buildField('Website', _websiteCtrl, Icons.language),
           _buildField('Location', _locationCtrl, Icons.location_on_outlined),
           _buildField('Company Size', _sizeCtrl, Icons.people_outline),
+          _buildField('Telegram', _telegramCtrl, Icons.send),
           _buildField('Contact Email', _emailCtrl, Icons.email_outlined),
           _buildField('Phone', _phoneCtrl, Icons.phone_outlined),
 
@@ -1866,16 +2458,13 @@ final List<Map<String, dynamic>> _recentApps = [
 ];
 
 final List<Map<String, dynamic>> _demoCandidates = [
-  {'name': 'Max Schneider', 'position': 'Affiliate Manager', 'job': 'Senior Affiliate Manager', 'status': 'interview', 'experience': '5 years', 'salary': '€5,000', 'location': 'Berlin', 'email': 'max@example.com', 'telegram': '@max_sch', 'linkedin': 'linkedin.com/in/maxschneider', 'date': 'Mar 10', 'skills': ['Affiliate Marketing', 'SEO', 'Google Ads', 'Analytics']},
-  {'name': 'Olga Petrov', 'position': 'Content Writer', 'job': 'Casino Content Writer', 'status': 'new', 'experience': '3 years', 'salary': '€3,000', 'location': 'Kyiv', 'email': 'olga@example.com', 'telegram': '@olga_pet', 'linkedin': 'linkedin.com/in/olgapetrov', 'date': 'Mar 13', 'skills': ['Copywriting', 'SEO', 'Casino', 'English C1']},
-  {'name': 'Anna Kowalska', 'position': 'Product Manager', 'job': 'Betting Product Manager', 'status': 'new', 'experience': '4 years', 'salary': '€6,000', 'location': 'Warsaw', 'email': 'anna@example.com', 'telegram': '@anna_kow', 'linkedin': 'linkedin.com/in/annakowalska', 'date': 'Mar 13', 'skills': ['Agile', 'Betting', 'Jira', 'SQL']},
-  {'name': 'Ivan Moroz', 'position': 'Content Writer', 'job': 'Casino Content Writer', 'status': 'reviewed', 'experience': '2 years', 'salary': '€2,500', 'location': 'Remote', 'email': 'ivan@example.com', 'telegram': '@ivan_mor', 'linkedin': 'linkedin.com/in/ivanmoroz', 'date': 'Mar 12', 'skills': ['Copywriting', 'WordPress', 'Gambling']},
-  {'name': 'Dmitry Volkov', 'position': 'QA Engineer', 'job': 'Senior Affiliate Manager', 'status': 'rejected', 'experience': '1 year', 'salary': '€2,000', 'location': 'Moscow', 'email': 'dmitry@example.com', 'telegram': '@dmitry_v', 'linkedin': 'linkedin.com/in/dmitryvolkov', 'date': 'Mar 8', 'skills': ['Manual QA', 'Selenium']},
-  {'name': 'Sarah Miller', 'position': 'Affiliate Manager', 'job': 'Senior Affiliate Manager', 'status': 'hired', 'experience': '6 years', 'salary': '€5,500', 'location': 'London', 'email': 'sarah@example.com', 'telegram': '@sarah_m', 'linkedin': 'linkedin.com/in/sarahmiller', 'date': 'Mar 5', 'skills': ['Affiliate Networks', 'CPA', 'Gambling', 'Crypto']},
+  {'name': 'Max Schneider', 'position': 'Affiliate Manager', 'job': 'Senior Affiliate Manager', 'status': 'interview', 'experience': '5 years', 'salary': '€5,000', 'location': 'Berlin', 'email': 'max@example.com', 'phone': '+49 170 123 4567', 'telegram': '@max_sch', 'linkedin': 'linkedin.com/in/maxschneider', 'date': 'Mar 10', 'skills': ['Affiliate Marketing', 'SEO', 'Google Ads', 'Analytics']},
+  {'name': 'Olga Petrov', 'position': 'Content Writer', 'job': 'Casino Content Writer', 'status': 'new', 'experience': '3 years', 'salary': '€3,000', 'location': 'Kyiv', 'email': 'olga@example.com', 'phone': '+380 67 123 4567', 'telegram': '@olga_pet', 'linkedin': 'linkedin.com/in/olgapetrov', 'date': 'Mar 13', 'skills': ['Copywriting', 'SEO', 'Casino', 'English C1']},
+  {'name': 'Anna Kowalska', 'position': 'Product Manager', 'job': 'Betting Product Manager', 'status': 'new', 'experience': '4 years', 'salary': '€6,000', 'location': 'Warsaw', 'email': 'anna@example.com', 'phone': '+48 500 123 456', 'telegram': '@anna_kow', 'linkedin': 'linkedin.com/in/annakowalska', 'date': 'Mar 13', 'skills': ['Agile', 'Betting', 'Jira', 'SQL']},
+  {'name': 'Ivan Moroz', 'position': 'Content Writer', 'job': 'Casino Content Writer', 'status': 'reviewed', 'experience': '2 years', 'salary': '€2,500', 'location': 'Remote', 'email': 'ivan@example.com', 'phone': '+380 50 987 6543', 'telegram': '@ivan_mor', 'linkedin': 'linkedin.com/in/ivanmoroz', 'date': 'Mar 12', 'skills': ['Copywriting', 'WordPress', 'Gambling']},
+  {'name': 'Dmitry Volkov', 'position': 'QA Engineer', 'job': 'Senior Affiliate Manager', 'status': 'rejected', 'experience': '1 year', 'salary': '€2,000', 'location': 'Moscow', 'email': 'dmitry@example.com', 'phone': '+7 916 123 4567', 'telegram': '@dmitry_v', 'linkedin': 'linkedin.com/in/dmitryvolkov', 'date': 'Mar 8', 'skills': ['Manual QA', 'Selenium']},
+  {'name': 'Sarah Miller', 'position': 'Affiliate Manager', 'job': 'Senior Affiliate Manager', 'status': 'hired', 'experience': '6 years', 'salary': '€5,500', 'location': 'London', 'email': 'sarah@example.com', 'phone': '+44 20 7946 0958', 'telegram': '@sarah_m', 'linkedin': 'linkedin.com/in/sarahmiller', 'date': 'Mar 5', 'skills': ['Affiliate Networks', 'CPA', 'Gambling', 'Crypto']},
 ];
-
-/// Tracks which contacts the employer has unlocked (candidateName -> Set of 'telegram'|'linkedin'|'chat')
-final Map<String, Set<String>> _unlockedContacts = {};
 
 /// Private notes per job (jobTitle -> note text)
 final Map<String, String> _jobNotes = {};
