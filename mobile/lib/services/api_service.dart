@@ -3,6 +3,17 @@ import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode;
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+/// Thrown when the API returns 401. AuthProvider catches this and triggers a
+/// hard logout, which wipes both the secure-storage token and SharedPreferences
+/// — preventing the "ghost identity" bug where a stale token shows another
+/// user's name on first launch after reinstall.
+class UnauthorizedException implements Exception {
+  final String message;
+  UnauthorizedException([this.message = 'Unauthorized']);
+  @override
+  String toString() => 'UnauthorizedException: $message';
+}
+
 class ApiService {
   /// Always production for web & release, local only for mobile debug
   static final String baseUrl = 'https://gurojobs.com/api/v1';
@@ -120,6 +131,9 @@ class ApiService {
       Uri.parse('$baseUrl/me'),
       headers: _headers(token: token),
     );
+    if (response.statusCode == 401) {
+      throw UnauthorizedException('Token rejected by server');
+    }
     return jsonDecode(response.body);
   }
 
