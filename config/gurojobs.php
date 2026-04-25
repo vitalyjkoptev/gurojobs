@@ -30,8 +30,11 @@ return [
     */
     'telegram' => [
         'bot_token' => env('TELEGRAM_BOT_TOKEN'),
+        'bot_username' => env('TELEGRAM_BOT_USERNAME'),
         'webhook_url' => env('TELEGRAM_WEBHOOK_URL'),
         'community_channels' => explode(',', env('TELEGRAM_CHANNELS', '')),
+        'auth_redirect' => env('TELEGRAM_AUTH_REDIRECT', '/dashboard'),
+        'auth_ttl' => (int) env('TELEGRAM_AUTH_TTL', 86400),
     ],
 
     /*

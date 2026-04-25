@@ -459,11 +459,14 @@
 
     // Telegram login
     function loginWithTelegram() {
-        var w=550, h=470, l=(screen.width-w)/2, t=(screen.height-h)/2;
-        window.open('/api/v1/auth/telegram/redirect', 'telegram_auth', 'width='+w+',height='+h+',left='+l+',top='+t+',toolbar=no,menubar=no');
+        var w=550, h=520, l=(screen.width-w)/2, t=(screen.height-h)/2;
+        window.open('/auth/telegram/redirect', 'telegram_auth', 'width='+w+',height='+h+',left='+l+',top='+t+',toolbar=no,menubar=no');
     }
     window.addEventListener('message', function(e) {
-        if (e.data && e.data.type === 'telegram_auth_success') { window.location.href = '{{ route("home") }}'; }
+        if (e.origin !== window.location.origin) return;
+        if (e.data && e.data.type === 'telegram_auth_success') {
+            window.location.href = e.data.redirect || '{{ route("home") }}';
+        }
     });
 </script>
 @endpush

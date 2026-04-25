@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\JobsController as AdminJobsController;
 use App\Http\Controllers\Admin\UsersController;
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Auth\TelegramAuthController;
 use App\Http\Controllers\Api\V1\JarvisController;
 use App\Http\Controllers\Api\V1\JobsController;
 use App\Http\Controllers\Api\V1\ReviewsController;
@@ -32,6 +33,9 @@ Route::prefix('v1')->group(function () {
     Route::post('login', [AuthController::class, 'login']);
     Route::post('login/recovery', [RecoveryCodeController::class, 'loginWithCode']);
 
+    // Telegram login (для мобильного клиента: проверяет подпись от Telegram Login Widget)
+    Route::post('auth/telegram/callback', [TelegramAuthController::class, 'callback']);
+
     // Public Jobs
     Route::get('jobs', [JobsController::class, 'index']);
     Route::get('jobs/categories', [JobsController::class, 'categories']);
@@ -50,6 +54,10 @@ Route::prefix('v1')->group(function () {
         // Auth
         Route::post('logout', [AuthController::class, 'logout']);
         Route::get('me', [AuthController::class, 'me']);
+
+        // Telegram link / unlink (привязать TG к существующему аккаунту)
+        Route::post('auth/telegram/link', [TelegramAuthController::class, 'link']);
+        Route::delete('auth/telegram/link', [TelegramAuthController::class, 'unlink']);
 
         // Recovery Codes
         Route::post('recovery-codes/generate', [RecoveryCodeController::class, 'generate']);

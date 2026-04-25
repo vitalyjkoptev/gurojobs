@@ -18,7 +18,7 @@ class User extends Authenticatable
     protected $fillable = [
         'name', 'email', 'password', 'role',
         'phone', 'avatar', 'telegram_id', 'telegram_username',
-        'status', 'company_id', 'last_seen_at',
+        'status', 'company_id', 'last_seen_at', 'onboarded_at',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -28,7 +28,15 @@ class User extends Authenticatable
         'password' => 'hashed',
         'role' => UserRole::class,
         'last_seen_at' => 'datetime',
+        'onboarded_at' => 'datetime',
     ];
+
+    public function needsOnboarding(): bool
+    {
+        return $this->onboarded_at === null
+            || $this->status === 'pending'
+            || empty($this->email);
+    }
 
     // ── Scopes ────────────────────────────────────────────────
     public function scopeAdmins($query) { return $query->where('role', UserRole::Admin); }

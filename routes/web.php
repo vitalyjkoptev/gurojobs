@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Admin\WebAdminController;
+use App\Http\Controllers\Auth\OnboardingController;
+use App\Http\Controllers\Auth\TelegramAuthController;
 use App\Http\Controllers\Auth\WebAuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Public\HomeController;
@@ -33,10 +35,18 @@ Route::middleware('guest')->group(function () {
     Route::get('/demo-login', [WebAuthController::class, 'demoLogin'])->name('demo.login'); // TODO: remove
 });
 
+// ── Telegram Login (виджет работает по GET-callback'у, доступен и гостю, и авторизованному) ──
+Route::get('/auth/telegram/redirect', [TelegramAuthController::class, 'redirect'])->name('auth.telegram.redirect');
+Route::get('/auth/telegram/callback', [TelegramAuthController::class, 'callback'])->name('auth.telegram.callback');
+
 // ── Authenticated ───────────────────────────────────────────
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [WebAuthController::class, 'logout'])->name('logout');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Онбординг для пользователей, пришедших через Telegram (роль + email)
+    Route::get('/onboarding', [OnboardingController::class, 'show'])->name('onboarding');
+    Route::post('/onboarding', [OnboardingController::class, 'store'])->name('onboarding.store');
 });
 
 // ── Admin Panel ────────────────────────────────────────────

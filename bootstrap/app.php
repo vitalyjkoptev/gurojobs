@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
             'track.lastseen' => \App\Http\Middleware\TrackLastSeen::class,
+            'onboarded' => \App\Http\Middleware\EnsureOnboarded::class,
         ]);
 
         $middleware->statefulApi();
