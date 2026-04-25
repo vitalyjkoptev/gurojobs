@@ -134,6 +134,43 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  /// Логин через Telegram. На вход — подписанный payload от Telegram Login Widget
+  /// (id, auth_date, hash + first_name/username/...). Сервер сам проверит подпись.
+  Future<bool> loginWithTelegram(Map<String, String> payload) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final response = await ApiService.telegramAuth(payload);
+
+      if (response['token'] != null) {
+        await ApiService.saveToken(response['token']);
+        final user = response['user'] as Map<String, dynamic>?;
+        _userName = (user?['name'] as String?) ?? 'Telegram user';
+        _userEmail = (user?['email'] as String?) ?? '';
+        _userRole = (user?['role'] as String?) ?? 'candidate';
+        await prefs.setString('user_name', _userName!);
+        await prefs.setString('user_email', _userEmail!);
+        await prefs.setString('user_role', _userRole!);
+        _isLoggedIn = true;
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      }
+
+      _errorMessage = response['message'] ?? 'Telegram authorization failed';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _errorMessage = 'Connection error. Please try again.';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<bool> forgotPassword({required String email}) async {
     _isLoading = true;
     _errorMessage = null;

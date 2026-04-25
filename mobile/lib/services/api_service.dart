@@ -105,6 +105,20 @@ class ApiService {
     await clearToken();
   }
 
+  /// Telegram Login Widget callback — отправляет подписанный payload Laravel,
+  /// получает обратно Sanctum-токен и пользователя.
+  /// payload должен содержать как минимум: id, auth_date, hash + first_name/last_name/username/photo_url.
+  static Future<Map<String, dynamic>> telegramAuth(Map<String, String> payload) async {
+    final response = await _postForm('$baseUrl/auth/telegram/callback', payload);
+    return jsonDecode(response.body);
+  }
+
+  /// Базовый URL без префикса /api/v1 — для веб-страницы виджета Telegram.
+  static String get webBaseUrl =>
+      baseUrl.endsWith('/api/v1') ? baseUrl.substring(0, baseUrl.length - 7) : baseUrl;
+  static String get telegramRedirectUrl => '$webBaseUrl/auth/telegram/redirect';
+  static String get telegramCallbackUrl => '$webBaseUrl/auth/telegram/callback';
+
   static Future<Map<String, dynamic>> forgotPassword({
     required String email,
   }) async {

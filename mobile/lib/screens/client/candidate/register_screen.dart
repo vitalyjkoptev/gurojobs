@@ -5,6 +5,7 @@ import '../../../core/localization.dart';
 import '../../../providers/auth_provider.dart';
 import 'dashboard_screen.dart';
 import 'splash_screen.dart';
+import 'telegram_login_screen.dart';
 import '../../employer/employer_dashboard.dart';
 import '../../boss/admin_dashboard.dart';
 
@@ -305,6 +306,30 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                               : Text(_isLogin ? AppStrings.t('sign_in') : AppStrings.t('create_account'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                         ),
                       ),
+
+                      // ── Telegram login (скрыто для admin) ─────────────
+                      if (!_isAdminLogin) ...[
+                        const SizedBox(height: 14),
+                        SizedBox(
+                          width: double.infinity, height: 52,
+                          child: OutlinedButton.icon(
+                            onPressed: auth.isLoading ? null : () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const TelegramLoginScreen()),
+                              );
+                            },
+                            icon: const Icon(Icons.send, color: Color(0xFF229ED9)),
+                            label: const Text(
+                              'Continue with Telegram',
+                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xFF229ED9)),
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: Color(0xFF229ED9), width: 1.4),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
