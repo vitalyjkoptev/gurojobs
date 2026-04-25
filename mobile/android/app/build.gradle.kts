@@ -8,7 +8,10 @@ plugins {
 android {
     namespace = "com.gurojobs.gurojobs"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    // Pinned: plugins (flutter_secure_storage, webview_flutter_android,
+    // url_launcher_android, sqflite_android, path_provider_android,
+    // shared_preferences_android) all require NDK 27.x.
+    ndkVersion = "27.0.12077973"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
